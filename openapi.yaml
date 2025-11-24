@@ -25,7 +25,6 @@ paths:
     get:
       tags:
       - Health
-      - Health
       summary: Health Check
       description: Returns the health status of the service
       operationId: health_check_health_get
@@ -39,7 +38,6 @@ paths:
   /ready:
     get:
       tags:
-      - Health
       - Health
       summary: Readiness Check
       description: Returns the readiness status of the service and its dependencies
