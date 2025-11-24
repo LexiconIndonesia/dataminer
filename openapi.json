@@ -869,6 +869,11 @@
           "ocr_threshold": {
             "anyOf": [
               {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
                 "type": "string",
                 "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
               },
@@ -981,6 +986,11 @@
           "llm_temperature": {
             "anyOf": [
               {
+                "type": "number",
+                "maximum": 2.0,
+                "minimum": 0.0
+              },
+              {
                 "type": "string",
                 "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,1}0*$"
               },
@@ -1009,6 +1019,10 @@
           },
           "max_cost_per_document": {
             "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
               {
                 "type": "string",
                 "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
