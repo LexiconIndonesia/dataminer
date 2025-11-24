@@ -47,7 +47,11 @@ class SourceRepository:
 
     async def update_source(self, source_id: str, update_data: dict) -> DocumentSource | None:
         """Update document source configuration."""
-        source = await self.get_source_by_id(source_id)
+        # Lightweight fetch without eager-loading relationships
+        stmt = select(DocumentSource).where(DocumentSource.source_id == source_id)
+        result = await self.session.execute(stmt)
+        source = result.scalar_one_or_none()
+
         if not source:
             return None
 

@@ -56,6 +56,7 @@ logs/
 
 # Generated code
 src/dataminer/generated/
+src/dataminer/api/generated/models.py
 src/dataminer/db/queries/
 sql/schema.sql
 

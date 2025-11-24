@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dataminer.api.schemas.source import (
+from dataminer.api.generated import (
     DocumentSourceResponse,
     DocumentSourceUpdate,
     ExtractionProfileCreate,

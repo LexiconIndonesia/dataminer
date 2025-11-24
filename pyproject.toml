@@ -201,3 +201,12 @@ module = [
     "dataminer.core.config",
 ]
 disable_error_code = ["assignment", "override", "misc", "attr-defined", "arg-type"]
+
+[[tool.mypy.overrides]]
+module = ["dataminer.api.generated.models"]
+ignore_errors = true
+
+[dependency-groups]
+dev = [
+    "datamodel-code-generator[http]>=0.35.0",
+]

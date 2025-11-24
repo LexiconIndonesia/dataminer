@@ -1,4 +1,4 @@
-.PHONY: help install dev test test-cov lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down openapi security
+.PHONY: help install dev test test-cov lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down openapi api-generate security
 
 # Colors for output
 BLUE := \033[0;34m
@@ -129,6 +129,22 @@ openapi: ## Generate OpenAPI spec
 	@echo "$(BLUE)Generating OpenAPI spec...$(NC)"
 	uv run python -c "from dataminer.api.app import app; import json; spec = app.openapi(); print(json.dumps(spec, indent=2))" > openapi.json
 	@echo "$(GREEN)OpenAPI spec saved to openapi.json$(NC)"
+
+api-generate: ## Generate Pydantic models from OpenAPI spec (contract-first)
+	@echo "$(BLUE)Generating Pydantic models from OpenAPI spec...$(NC)"
+	uv run datamodel-codegen \
+		--input openapi.yaml \
+		--output src/dataminer/api/generated/models.py \
+		--output-model-type pydantic_v2.BaseModel \
+		--target-python-version 3.14 \
+		--use-standard-collections \
+		--use-schema-description \
+		--field-constraints \
+		--use-default \
+		--use-annotated \
+		--use-title-as-name \
+		--disable-timestamp
+	@echo "$(GREEN)Generated models saved to src/dataminer/api/generated/models.py$(NC)"
 
 schema-generate: ## Generate SQL schema from Alembic models
 	@echo "$(BLUE)Generating SQL schema...$(NC)"
