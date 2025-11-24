@@ -17,6 +17,8 @@ A high-performance document extraction service for processing legal documents fr
 - **Python**: 3.14
 - **Package Manager**: UV
 - **Web Framework**: FastAPI
+- **API Design**: Contract-first with OpenAPI
+- **Code Generation**: datamodel-code-generator for Pydantic models
 - **Database**: PostgreSQL 16+
 - **Migrations**: Alembic
 - **SQL**: SQLC for type-safe queries
@@ -39,6 +41,9 @@ A high-performance document extraction service for processing legal documents fr
 ```bash
 # Install dependencies
 make install
+
+# Generate API models from OpenAPI spec
+make api-generate
 
 # Start services (PostgreSQL, Redis, NATS)
 make docker-up
@@ -79,25 +84,89 @@ make check
 
 Run `make help` to see all available commands.
 
+## API Development (Contract-First)
+
+This project follows **contract-first API development**, where the OpenAPI specification serves as the single source of truth for API models.
+
+### Workflow
+
+```bash
+# 1. Design/update API contract
+vi openapi.yaml
+
+# 2. Generate Pydantic models from spec
+make api-generate
+
+# 3. Models are auto-generated in src/dataminer/api/generated/models.py
+# 4. Import and use in your routes
+from dataminer.api.generated import DocumentSourceResponse
+```
+
+### What's Tracked vs Generated
+
+**✅ Tracked in Git (Source of Truth):**
+- `openapi.yaml` - API contract specification
+- `openapi.json` - Alternative JSON format
+- `src/dataminer/api/generated/__init__.py` - Clean import interface
+
+**❌ Git Ignored (Generated Code):**
+- `src/dataminer/api/generated/models.py` - Auto-generated from spec (run `make api-generate`)
+- `src/dataminer/db/queries/` - Auto-generated from SQLC (run `make sqlc-generate`)
+- `sql/schema.sql` - Auto-generated from Alembic (run `make schema-generate`)
+
+### Benefits of Contract-First
+
+- **Single Source of Truth**: OpenAPI spec defines everything
+- **No Drift**: Models always match documentation
+- **Better Collaboration**: Frontend can work from spec independently
+- **Client Generation**: Generate TypeScript/Go/etc clients from same spec
+- **API Governance**: Easier contract review and approval
+
+### After Pulling Changes
+
+If someone updated `openapi.yaml`, regenerate the models:
+
+```bash
+git pull
+make api-generate
+```
+
 ## Project Structure
 
 ```
 dataminer/
 ├── src/
-│   └── dataminer/         # Application source code
-│       ├── api/           # API endpoints
-│       ├── core/          # Core business logic
-│       ├── db/            # Database models and queries
-│       ├── services/      # External services integration
-│       └── utils/         # Utility functions
-├── tests/                 # Test files
-├── migrations/            # Alembic migrations
-├── docs/                  # Documentation
-├── PRD/                   # Product requirements
-├── Makefile              # Development commands
-├── pyproject.toml        # Project configuration
-└── docker-compose.yml    # Local development setup
+│   └── dataminer/              # Application source code
+│       ├── api/                # API endpoints
+│       │   ├── generated/      # Generated Pydantic models (run make api-generate)
+│       │   ├── v1/             # API version 1 routes
+│       │   ├── app.py          # FastAPI application
+│       │   └── health.py       # Health check endpoints
+│       ├── core/               # Core business logic
+│       ├── db/                 # Database models and queries
+│       │   ├── models/         # SQLAlchemy ORM models
+│       │   ├── repositories/   # Data access layer
+│       │   └── queries/        # SQLC generated queries (run make sqlc-generate)
+│       ├── services/           # External services integration
+│       └── utils/              # Utility functions
+├── tests/                      # Test files
+├── migrations/                 # Alembic database migrations
+│   └── alembic/
+│       ├── versions/           # Migration files
+│       └── env.py              # Alembic configuration
+├── sql/                        # SQL files
+│   ├── queries/                # SQLC query definitions
+│   └── schema.sql              # Generated schema (run make schema-generate)
+├── docs/                       # Documentation
+├── PRD/                        # Product requirements
+├── openapi.yaml               # API contract specification (source of truth)
+├── openapi.json               # API contract (JSON format)
+├── Makefile                   # Development commands
+├── pyproject.toml             # Project configuration
+└── docker-compose.yml         # Local development setup
 ```
+
+**Note:** Files marked with "run make ..." are auto-generated and git-ignored. Regenerate them locally after pulling changes.
 
 ## API Documentation
 
@@ -148,6 +217,24 @@ make db-reset
 # Seed test data
 make db-seed
 ```
+
+## Code Generation
+
+```bash
+# Generate Pydantic models from OpenAPI spec (contract-first)
+make api-generate
+
+# Generate SQL schema from Alembic models
+make schema-generate
+
+# Generate type-safe SQL queries with SQLC
+make sqlc-generate
+
+# Generate OpenAPI spec from FastAPI routes (code-first alternative)
+make openapi
+```
+
+**Note:** After pulling changes to `openapi.yaml`, always run `make api-generate` to regenerate models locally.
 
 ## Docker
 
