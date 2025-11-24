@@ -1,0 +1,1211 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Dataminer",
+    "description": "Document extraction service for legal documents",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "Root"
+        ],
+        "summary": "Root Endpoint",
+        "description": "Root endpoint with basic info.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health",
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "Returns the health status of the service",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "Health",
+          "Health"
+        ],
+        "summary": "Readiness Check",
+        "description": "Returns the readiness status of the service and its dependencies",
+        "operationId": "readiness_check_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dataminer/sources": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "List all document sources",
+        "description": "Get a list of all configured document sources",
+        "operationId": "list_sources_api_v1_dataminer_sources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentSourceResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Sources Api V1 Dataminer Sources Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dataminer/sources/{source_id}": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Get source details",
+        "description": "Get detailed information about a specific document source",
+        "operationId": "get_source_api_v1_dataminer_sources__source_id__get",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentSourceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Source not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dataminer/sources/{source_id}/config": {
+      "put": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Update source configuration",
+        "description": "Update configuration for an existing document source",
+        "operationId": "update_source_config_api_v1_dataminer_sources__source_id__config_put",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentSourceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentSourceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Source not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dataminer/sources/{source_id}/profiles": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "List extraction profiles",
+        "description": "Get all extraction profiles for a specific source",
+        "operationId": "list_profiles_api_v1_dataminer_sources__source_id__profiles_get",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExtractionProfileResponse"
+                  },
+                  "title": "Response List Profiles Api V1 Dataminer Sources  Source Id  Profiles Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Source not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Create extraction profile",
+        "description": "Create a new extraction profile for a document source",
+        "operationId": "create_profile_api_v1_dataminer_sources__source_id__profiles_post",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractionProfileCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionProfileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Source not found"
+          },
+          "409": {
+            "description": "Profile with same name already exists"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DocumentSourceResponse": {
+        "properties": {
+          "source_name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Source Name",
+            "description": "Source display name"
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Code",
+            "description": "ISO country code"
+          },
+          "primary_language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Language",
+            "description": "Primary language code"
+          },
+          "secondary_languages": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secondary Languages",
+            "description": "List of secondary language codes"
+          },
+          "legal_system": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legal System",
+            "description": "Legal system type"
+          },
+          "document_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Type",
+            "description": "Type of documents"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Whether source is active",
+            "default": true
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase",
+            "description": "Development phase number",
+            "default": 1
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "total_documents_processed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Documents Processed"
+          },
+          "avg_accuracy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Accuracy"
+          },
+          "avg_cost_per_document": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Cost Per Document"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_name",
+          "source_id"
+        ],
+        "title": "DocumentSourceResponse",
+        "description": "Schema for document source response."
+      },
+      "DocumentSourceUpdate": {
+        "properties": {
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "avg_accuracy": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Accuracy"
+          },
+          "avg_cost_per_document": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Cost Per Document"
+          }
+        },
+        "type": "object",
+        "title": "DocumentSourceUpdate",
+        "description": "Schema for updating document source configuration."
+      },
+      "ExtractionProfileCreate": {
+        "properties": {
+          "profile_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Profile Name",
+            "description": "Profile display name"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Whether profile is active",
+            "default": true
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default",
+            "description": "Whether this is the default profile",
+            "default": false
+          },
+          "pdf_extraction_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Extraction Method",
+            "description": "PDF extraction method",
+            "default": "pdfplumber"
+          },
+          "ocr_threshold": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Threshold",
+            "description": "OCR quality threshold",
+            "default": "0.80"
+          },
+          "ocr_language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Language",
+            "description": "OCR language code"
+          },
+          "use_document_ai_fallback": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use Document Ai Fallback",
+            "description": "Use Document AI as fallback",
+            "default": true
+          },
+          "segmentation_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segmentation Method",
+            "description": "Text segmentation method",
+            "default": "section_based"
+          },
+          "segment_size_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 100.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segment Size Tokens",
+            "description": "Segment size in tokens",
+            "default": 3000
+          },
+          "segment_overlap_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segment Overlap Tokens",
+            "description": "Segment overlap in tokens",
+            "default": 200
+          },
+          "llm_model_quick": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model Quick",
+            "description": "Quick LLM model",
+            "default": "gemini-1.5-flash"
+          },
+          "llm_model_detailed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model Detailed",
+            "description": "Detailed LLM model",
+            "default": "gemini-1.5-pro"
+          },
+          "llm_temperature": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,1}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Temperature",
+            "description": "LLM temperature",
+            "default": "0.1"
+          },
+          "max_retries": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Retries",
+            "description": "Maximum retry attempts",
+            "default": 2
+          },
+          "max_cost_per_document": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Cost Per Document",
+            "description": "Maximum cost per document",
+            "default": "2.00"
+          },
+          "enable_deep_dive_pass": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enable Deep Dive Pass",
+            "description": "Enable deep dive pass",
+            "default": true
+          },
+          "deep_dive_confidence_threshold": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deep Dive Confidence Threshold",
+            "description": "Deep dive confidence threshold",
+            "default": "0.75"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile_name"
+        ],
+        "title": "ExtractionProfileCreate",
+        "description": "Schema for creating a new extraction profile."
+      },
+      "ExtractionProfileResponse": {
+        "properties": {
+          "profile_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Profile Name",
+            "description": "Profile display name"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Whether profile is active",
+            "default": true
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default",
+            "description": "Whether this is the default profile",
+            "default": false
+          },
+          "pdf_extraction_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Extraction Method",
+            "description": "PDF extraction method",
+            "default": "pdfplumber"
+          },
+          "ocr_threshold": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Threshold",
+            "description": "OCR quality threshold",
+            "default": "0.80"
+          },
+          "ocr_language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Language",
+            "description": "OCR language code"
+          },
+          "use_document_ai_fallback": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use Document Ai Fallback",
+            "description": "Use Document AI as fallback",
+            "default": true
+          },
+          "segmentation_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segmentation Method",
+            "description": "Text segmentation method",
+            "default": "section_based"
+          },
+          "segment_size_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 100.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segment Size Tokens",
+            "description": "Segment size in tokens",
+            "default": 3000
+          },
+          "segment_overlap_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segment Overlap Tokens",
+            "description": "Segment overlap in tokens",
+            "default": 200
+          },
+          "llm_model_quick": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model Quick",
+            "description": "Quick LLM model",
+            "default": "gemini-1.5-flash"
+          },
+          "llm_model_detailed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model Detailed",
+            "description": "Detailed LLM model",
+            "default": "gemini-1.5-pro"
+          },
+          "llm_temperature": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,1}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Temperature",
+            "description": "LLM temperature",
+            "default": "0.1"
+          },
+          "max_retries": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Retries",
+            "description": "Maximum retry attempts",
+            "default": 2
+          },
+          "max_cost_per_document": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Cost Per Document",
+            "description": "Maximum cost per document",
+            "default": "2.00"
+          },
+          "enable_deep_dive_pass": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enable Deep Dive Pass",
+            "description": "Enable deep dive pass",
+            "default": true
+          },
+          "deep_dive_confidence_threshold": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,2}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deep Dive Confidence Threshold",
+            "description": "Deep dive confidence threshold",
+            "default": "0.75"
+          },
+          "profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Profile Id"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile_name",
+          "profile_id"
+        ],
+        "title": "ExtractionProfileResponse",
+        "description": "Schema for extraction profile response."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Service status",
+            "default": "healthy"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Application version"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "Current timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "title": "HealthResponse",
+        "description": "Health check response model."
+      },
+      "ReadinessResponse": {
+        "properties": {
+          "ready": {
+            "type": "boolean",
+            "title": "Ready",
+            "description": "Service readiness status"
+          },
+          "checks": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Checks",
+            "description": "Individual component checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ready"
+        ],
+        "title": "ReadinessResponse",
+        "description": "Readiness check response model."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
