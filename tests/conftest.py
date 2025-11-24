@@ -2,17 +2,22 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
-from typing import Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import pytest
+import sqlparse
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from dataminer.api.app import create_app
 from dataminer.core.config import Settings
-from dataminer.db.base import Base
-from dataminer.db.models.configuration import DocumentSource
+from dataminer.db.repositories.source import SourceRepository
+
+if TYPE_CHECKING:
+    from dataminer.db.queries.models import DocumentSource
 
 
 @pytest.fixture(scope="session")
@@ -64,15 +69,50 @@ async def db_engine():
         echo=False,
     )
 
-    # Create tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Create tables from SQL schema file
+    schema_path = Path(__file__).parent.parent / "sql" / "schema.sql"
+    if schema_path.exists():
+        async with engine.begin() as conn:
+            schema_sql = schema_path.read_text()
+
+            # Use sqlparse for robust SQL statement splitting
+            # This properly handles semicolons in strings, comments, and function bodies
+            statements = sqlparse.split(schema_sql)
+
+            for statement in statements:
+                # Strip whitespace and skip empty statements
+                statement = statement.strip()
+                if statement:
+                    # Skip comment-only statements
+                    parsed = sqlparse.parse(statement)
+                    if parsed and not all(
+                        token.ttype
+                        in (
+                            sqlparse.tokens.Comment.Single,
+                            sqlparse.tokens.Comment.Multiline,
+                            sqlparse.tokens.Whitespace,
+                            sqlparse.tokens.Newline,
+                        )
+                        for stmt in parsed
+                        for token in stmt.flatten()
+                    ):
+                        await conn.execute(text(statement))
 
     yield engine
 
-    # Drop tables after test
+    # Drop all tables after test
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        await conn.execute(
+            text("""
+                DO $$ DECLARE
+                    r RECORD;
+                BEGIN
+                    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+                        EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+                    END LOOP;
+                END $$;
+            """)
+        )
 
     await engine.dispose()
 
@@ -93,8 +133,9 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession]:
 
 @pytest.fixture
 async def test_source(db_session: AsyncSession) -> DocumentSource:
-    """Create a test document source."""
-    source = DocumentSource(
+    """Create a test document source using repository."""
+    repo = SourceRepository(db_session)
+    source = await repo.create_source(
         source_id="TEST_SC",
         source_name="Test Supreme Court",
         country_code="TST",
@@ -104,7 +145,7 @@ async def test_source(db_session: AsyncSession) -> DocumentSource:
         is_active=True,
         phase=1,
     )
-    db_session.add(source)
     await db_session.commit()
-    await db_session.refresh(source)
+    if source is None:
+        raise RuntimeError("Failed to create test source")
     return source

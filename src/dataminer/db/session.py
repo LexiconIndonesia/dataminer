@@ -12,12 +12,22 @@ Session Management Strategy:
 
 from collections.abc import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
-from dataminer.db.base import get_engine
+from dataminer.core.config import get_settings
 
-# Create global session maker
-engine = get_engine()
+# Create global engine and session maker
+settings = get_settings()
+engine = create_async_engine(
+    str(settings.database_url).replace("postgresql://", "postgresql+asyncpg://"),
+    echo=settings.db_echo,
+    pool_size=settings.db_pool_size,
+    max_overflow=settings.db_max_overflow,
+)
 SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 

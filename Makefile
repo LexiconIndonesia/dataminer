@@ -1,8 +1,9 @@
-.PHONY: help install dev test test-cov lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down openapi api-generate security
+.PHONY: help install dev test test-cov lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down api-generate security
 
 # Colors for output
 BLUE := \033[0;34m
 GREEN := \033[0;32m
+RED := \033[0;31m
 NC := \033[0m # No Color
 
 help: ## Show this help message
@@ -125,13 +126,17 @@ docker-dev: ## Start services in development mode
 	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 # Code Generation
-openapi: ## Generate OpenAPI spec
-	@echo "$(BLUE)Generating OpenAPI spec...$(NC)"
-	uv run python -c "from dataminer.api.app import app; import json; spec = app.openapi(); print(json.dumps(spec, indent=2))" > openapi.json
-	@echo "$(GREEN)OpenAPI spec saved to openapi.json$(NC)"
-
 api-generate: ## Generate Pydantic models from OpenAPI spec (contract-first)
 	@echo "$(BLUE)Generating Pydantic models from OpenAPI spec...$(NC)"
+	@if ! uv run python -c "import datamodel_code_generator" 2>/dev/null; then \
+		echo "$(RED)Error: datamodel-code-generator is not installed$(NC)"; \
+		echo ""; \
+		echo "Install it with: $(GREEN)make install$(NC)"; \
+		echo "Or manually with: $(GREEN)uv sync$(NC)"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@mkdir -p src/dataminer/api/generated
 	uv run datamodel-codegen \
 		--input openapi.yaml \
 		--output src/dataminer/api/generated/models.py \

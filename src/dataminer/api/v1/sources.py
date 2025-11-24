@@ -1,5 +1,7 @@
 """Source management API endpoints."""
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,12 +11,11 @@ from dataminer.api.generated import (
     ExtractionProfileCreate,
     ExtractionProfileResponse,
 )
-from dataminer.db.models.configuration import (
-    DocumentSource,
-    SourceExtractionProfile,
-)
 from dataminer.db.repositories.source import SourceRepository
 from dataminer.db.session import get_db
+
+if TYPE_CHECKING:
+    from dataminer.db.queries.models import DocumentSource, SourceExtractionProfile
 
 router = APIRouter()
 
@@ -80,7 +81,15 @@ async def update_source_config(
     # Convert to dict and exclude unset fields
     update_dict = update_data.model_dump(exclude_unset=True)
 
-    updated_source = await repo.update_source(source_id, update_dict)
+    # Call repository with named parameters
+    updated_source = await repo.update_source(
+        source_id=source_id,
+        source_name=update_dict.get("source_name"),
+        is_active=update_dict.get("is_active"),
+        phase=update_dict.get("phase"),
+        avg_accuracy=update_dict.get("avg_accuracy"),
+        avg_cost_per_document=update_dict.get("avg_cost_per_document"),
+    )
 
     if not updated_source:
         raise HTTPException(
@@ -153,11 +162,16 @@ async def create_profile(
             detail=f"Profile with name '{profile_data.profile_name}' already exists for source '{source_id}'",
         )
 
-    # Create profile
-    profile = SourceExtractionProfile(
+    # Create profile using repository method
+    created_profile = await repo.create_profile(
         source_id=source_id,
         **profile_data.model_dump(),
     )
 
-    created_profile = await repo.create_profile(profile)
+    if not created_profile:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create profile",
+        )
+
     return created_profile
