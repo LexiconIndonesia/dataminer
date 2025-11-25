@@ -46,8 +46,13 @@ async def test_get_field_invalid_uuid(async_client_with_db: AsyncClient) -> None
 
 
 @pytest.mark.asyncio
-async def test_create_field_missing_name(async_client_with_db: AsyncClient) -> None:
+async def test_create_field_missing_name(
+    async_client_with_db: AsyncClient, db_session: AsyncSession
+) -> None:
     """Test creating field without required field_name."""
+    # Create the source first so we test validation, not missing source
+    await _create_test_source(db_session, "TEST_SOURCE", "Test Source for Validation")
+
     response = await async_client_with_db.post(
         "/v1/dataminer/sources/TEST_SOURCE/fields",
         json={},

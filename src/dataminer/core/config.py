@@ -4,40 +4,32 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from dotenv import load_dotenv
 from pydantic import Field, PostgresDsn, RedisDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def _find_and_load_env_file() -> Path | None:
-    """Find and load .env file if it exists, overriding existing env vars.
+def _find_env_file() -> Path | None:
+    """Find .env file by walking up from current file to project root.
 
-    In production, .env files typically don't exist - environment variables
-    are set directly by the deployment system. This function gracefully
-    handles both cases.
+    Returns the path if found, None otherwise. Pydantic-settings handles
+    the actual loading, ensuring system env vars take precedence over
+    .env file values (standard 12-factor app behavior).
     """
     current = Path(__file__).resolve()
     # Walk up to find .env file (src/dataminer/core/config.py -> project root)
     for parent in [current, *current.parents]:
         env_file = parent / ".env"
         if env_file.exists():
-            # Load with override=True to ensure .env values take precedence over
-            # any stale environment variables (useful in development)
-            load_dotenv(env_file, override=True)
             return env_file
     # No .env file found - rely on actual environment variables (production)
     return None
-
-
-# Load .env file before Settings class is defined (no-op in production)
-_env_file_path = _find_and_load_env_file()
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=_env_file_path,
+        env_file=_find_env_file(),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
