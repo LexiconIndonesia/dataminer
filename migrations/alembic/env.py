@@ -4,17 +4,17 @@ Note: This project uses manual SQL migrations, not autogenerate.
 ORM models are not required for migration management.
 """
 
-import sys
+import os
 from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
-# Add the src directory to the path
-sys.path.insert(0, str(Path(__file__).parents[3] / "src"))
-
-from dataminer.core.config import get_settings
+# Load .env file from project root (override=True to override existing env vars)
+project_root = Path(__file__).parents[2]
+load_dotenv(project_root / ".env", override=True)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -25,9 +25,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Set the database URL from settings
-settings = get_settings()
-config.set_main_option("sqlalchemy.url", str(settings.database_url))
+# Set the database URL from environment variable
+database_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/dataminer")
+config.set_main_option("sqlalchemy.url", database_url)
 
 # No target_metadata needed for manual migrations
 target_metadata = None

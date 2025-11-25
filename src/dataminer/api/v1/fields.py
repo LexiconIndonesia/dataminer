@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, RootModel
+from pydantic import RootModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dataminer.api.generated import (
+from dataminer.api.generated.models import (
     FieldDefinitionCreate,
     FieldDefinitionListResponse,
     FieldDefinitionResponse,
@@ -18,9 +19,6 @@ from dataminer.api.generated import (
 from dataminer.db.repositories.field import FieldRepository
 from dataminer.db.repositories.source import SourceRepository
 from dataminer.db.session import get_db
-
-if TYPE_CHECKING:
-    from dataminer.db.queries.models import SourceFieldDefinition
 
 router = APIRouter()
 
@@ -32,13 +30,41 @@ def _extract_root_value(value: Any) -> Any:
     return value
 
 
-class FieldListResponse(BaseModel):
-    """Response model for field listing with pagination."""
+def _make_timezone_aware(dt: datetime | None) -> datetime | None:
+    """Convert naive datetime to UTC timezone-aware datetime."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt
 
-    items: list[Any]
-    total: int
-    limit: int
-    offset: int
+
+def _prepare_field_for_response(field: Any) -> dict[str, Any]:
+    """Prepare a field dataclass for Pydantic model validation.
+
+    Converts naive datetimes to timezone-aware datetimes.
+    """
+    # Convert dataclass to dict-like access
+    data = {
+        "field_id": field.field_id,
+        "source_id": field.source_id,
+        "field_name": field.field_name,
+        "field_display_name": field.field_display_name,
+        "field_category": field.field_category,
+        "field_type": field.field_type,
+        "extraction_method": field.extraction_method,
+        "extraction_section": field.extraction_section,
+        "regex_pattern": field.regex_pattern,
+        "llm_prompt_template_id": field.llm_prompt_template_id,
+        "is_required": field.is_required,
+        "validation_rules": field.validation_rules,
+        "confidence_threshold": field.confidence_threshold,
+        "normalization_rules": field.normalization_rules,
+        "display_order": field.display_order,
+        "created_at": _make_timezone_aware(field.created_at),
+        "updated_at": _make_timezone_aware(field.updated_at),
+    }
+    return data
 
 
 @router.get(
@@ -58,7 +84,7 @@ async def list_fields(
     limit: Annotated[int, Query(ge=1, le=100, description="Maximum number of results")] = 50,
     offset: Annotated[int, Query(ge=0, description="Number of results to skip")] = 0,
     db: AsyncSession = Depends(get_db),
-) -> FieldListResponse:
+) -> FieldDefinitionListResponse:
     """List field definitions for a source with optional filtering and pagination."""
     source_repo = SourceRepository(db)
     field_repo = FieldRepository(db)
@@ -89,8 +115,14 @@ async def list_fields(
         is_required=is_required,
     )
 
-    return FieldListResponse(
-        items=fields_list,
+    # Convert SQLC dataclasses to Pydantic models with timezone-aware datetimes
+    items = [
+        FieldDefinitionResponse.model_validate(_prepare_field_for_response(field))
+        for field in fields_list
+    ]
+
+    return FieldDefinitionListResponse(
+        items=items,
         total=total,
         limit=limit,
         offset=offset,
@@ -112,7 +144,7 @@ async def create_field(
     source_id: str,
     field_data: FieldDefinitionCreate,
     db: AsyncSession = Depends(get_db),
-) -> SourceFieldDefinition:
+) -> FieldDefinitionResponse:
     """Create a new field definition for a source."""
     source_repo = SourceRepository(db)
     field_repo = FieldRepository(db)
@@ -145,13 +177,13 @@ async def create_field(
         field_type=_extract_root_value(field_data.field_type),
         extraction_method=_extract_root_value(field_data.extraction_method),
         extraction_section=_extract_root_value(field_data.extraction_section),
-        regex_pattern=field_data.regex_pattern,
-        llm_prompt_template_id=field_data.llm_prompt_template_id,
-        is_required=field_data.is_required,
-        validation_rules=field_data.validation_rules,
+        regex_pattern=_extract_root_value(field_data.regex_pattern),
+        llm_prompt_template_id=_extract_root_value(field_data.llm_prompt_template_id),
+        is_required=_extract_root_value(field_data.is_required),
+        validation_rules=_extract_root_value(field_data.validation_rules),
         confidence_threshold=confidence_threshold,
-        normalization_rules=field_data.normalization_rules,
-        display_order=field_data.display_order,
+        normalization_rules=_extract_root_value(field_data.normalization_rules),
+        display_order=_extract_root_value(field_data.display_order),
     )
 
     if not created_field:
@@ -160,7 +192,8 @@ async def create_field(
             detail="Failed to create field",
         )
 
-    return created_field
+    # Convert DB model to API response type with timezone-aware datetimes
+    return FieldDefinitionResponse.model_validate(_prepare_field_for_response(created_field))
 
 
 @router.get(
@@ -175,7 +208,7 @@ async def create_field(
 async def get_field(
     field_id: str,
     db: AsyncSession = Depends(get_db),
-) -> SourceFieldDefinition:
+) -> FieldDefinitionResponse:
     """Get field definition by ID."""
     from uuid import UUID
 
@@ -196,7 +229,8 @@ async def get_field(
             detail=f"Field with ID '{field_id}' not found",
         )
 
-    return field
+    # Convert DB model to API response type with timezone-aware datetimes
+    return FieldDefinitionResponse.model_validate(_prepare_field_for_response(field))
 
 
 @router.put(
@@ -213,7 +247,7 @@ async def update_field(
     field_id: str,
     update_data: FieldDefinitionUpdate,
     db: AsyncSession = Depends(get_db),
-) -> SourceFieldDefinition:
+) -> FieldDefinitionResponse:
     """Update field definition."""
     from uuid import UUID
 
@@ -264,13 +298,13 @@ async def update_field(
         field_type=_extract_root_value(update_data.field_type),
         extraction_method=_extract_root_value(update_data.extraction_method),
         extraction_section=_extract_root_value(update_data.extraction_section),
-        regex_pattern=update_data.regex_pattern,
-        llm_prompt_template_id=update_data.llm_prompt_template_id,
-        is_required=update_data.is_required,
-        validation_rules=update_data.validation_rules,
+        regex_pattern=_extract_root_value(update_data.regex_pattern),
+        llm_prompt_template_id=_extract_root_value(update_data.llm_prompt_template_id),
+        is_required=_extract_root_value(update_data.is_required),
+        validation_rules=_extract_root_value(update_data.validation_rules),
         confidence_threshold=confidence_threshold,
-        normalization_rules=update_data.normalization_rules,
-        display_order=update_data.display_order,
+        normalization_rules=_extract_root_value(update_data.normalization_rules),
+        display_order=_extract_root_value(update_data.display_order),
     )
 
     if not updated_field:
@@ -279,7 +313,8 @@ async def update_field(
             detail=f"Field with ID '{field_id}' not found",
         )
 
-    return updated_field
+    # Convert DB model to API response type with timezone-aware datetimes
+    return FieldDefinitionResponse.model_validate(_prepare_field_for_response(updated_field))
 
 
 @router.delete(
