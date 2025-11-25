@@ -1,5 +1,7 @@
 """Source management API endpoints."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, status

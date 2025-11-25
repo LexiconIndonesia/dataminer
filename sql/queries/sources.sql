@@ -25,13 +25,13 @@ RETURNING source_id, source_name, country_code, primary_language, secondary_lang
 
 -- name: UpdateSource :one
 UPDATE document_sources
-SET source_name = COALESCE($2, source_name),
-    is_active = COALESCE($3, is_active),
-    phase = COALESCE($4, phase),
-    avg_accuracy = COALESCE($5, avg_accuracy),
-    avg_cost_per_document = COALESCE($6, avg_cost_per_document),
+SET source_name = COALESCE(sqlc.narg('source_name'), source_name),
+    is_active = COALESCE(sqlc.narg('is_active'), is_active),
+    phase = COALESCE(sqlc.narg('phase'), phase),
+    avg_accuracy = COALESCE(sqlc.narg('avg_accuracy'), avg_accuracy),
+    avg_cost_per_document = COALESCE(sqlc.narg('avg_cost_per_document'), avg_cost_per_document),
     updated_at = NOW()
-WHERE source_id = $1
+WHERE source_id = sqlc.arg('source_id')
 RETURNING source_id, source_name, country_code, primary_language, secondary_languages,
           legal_system, document_type, is_active, phase, total_documents_processed,
           avg_accuracy, avg_cost_per_document, created_at, updated_at;

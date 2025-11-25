@@ -1,5 +1,7 @@
 """Source repository for database operations using SQLC queries."""
 
+from __future__ import annotations
+
 from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -74,7 +76,7 @@ class SourceRepository:
         querier = sources.AsyncQuerier(conn)
         params = sources.UpdateSourceParams(
             source_id=source_id,
-            source_name=source_name or "",  # Provide empty string if None
+            source_name=source_name,
             is_active=is_active,
             phase=phase,
             avg_accuracy=avg_accuracy,

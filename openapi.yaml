@@ -269,13 +269,13 @@ components:
         avg_accuracy:
           anyOf:
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+            pattern: ^[+-]?\d+(\.\d+)?$
           - type: 'null'
           title: Avg Accuracy
         avg_cost_per_document:
           anyOf:
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+            pattern: ^[+-]?\d+(\.\d+)?$
           - type: 'null'
           title: Avg Cost Per Document
         created_at:
@@ -320,7 +320,7 @@ components:
             maximum: 1.0
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
           - type: 'null'
           title: Avg Accuracy
         avg_cost_per_document:
@@ -328,7 +328,7 @@ components:
           - type: number
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
           - type: 'null'
           title: Avg Cost Per Document
       type: object
@@ -369,7 +369,7 @@ components:
             maximum: 1.0
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
           - type: 'null'
           title: Ocr Threshold
           description: OCR quality threshold
@@ -436,7 +436,7 @@ components:
             maximum: 2.0
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,1}0*$
+            pattern: ^[+-]?\d+(\.\d{1})?$
           - type: 'null'
           title: Llm Temperature
           description: LLM temperature
@@ -455,7 +455,7 @@ components:
           - type: number
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
           - type: 'null'
           title: Max Cost Per Document
           description: Maximum cost per document
@@ -473,7 +473,7 @@ components:
             maximum: 1.0
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
           - type: 'null'
           title: Deep Dive Confidence Threshold
           description: Deep dive confidence threshold
@@ -518,7 +518,7 @@ components:
             maximum: 1.0
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
           - type: 'null'
           title: Ocr Threshold
           description: OCR quality threshold
@@ -585,7 +585,7 @@ components:
             maximum: 2.0
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,1}0*$
+            pattern: ^[+-]?\d+(\.\d{1})?$
           - type: 'null'
           title: Llm Temperature
           description: LLM temperature
@@ -604,7 +604,7 @@ components:
           - type: number
             minimum: 0.0
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
           - type: 'null'
           title: Max Cost Per Document
           description: Maximum cost per document
@@ -619,7 +619,7 @@ components:
         deep_dive_confidence_threshold:
           anyOf:
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
           - type: 'null'
           title: Deep Dive Confidence Threshold
           description: Deep dive confidence threshold

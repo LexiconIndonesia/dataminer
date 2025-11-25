@@ -10,7 +10,7 @@ Note: This requires a temporary database to apply migrations.
 import subprocess
 import sys
 from contextlib import suppress
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -46,7 +46,7 @@ def generate_schema_sql(output_file: str = "sql/schema.sql") -> None:
     # - Starts with letter (required by PostgreSQL)
     # - Uniqueness: timestamp (second precision) + UUID hex (cryptographic randomness)
     # - No collision risk across concurrent runs
-    timestamp = datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")  # type: ignore[attr-defined]
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     unique_id = uuid4().hex[:12]  # Use first 12 chars of UUID for uniqueness
     temp_db_name = f"temp_schema_{timestamp}_{unique_id}"
 
