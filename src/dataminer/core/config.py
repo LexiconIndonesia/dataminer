@@ -1,17 +1,43 @@
 """Application configuration management."""
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
+from dotenv import load_dotenv
 from pydantic import Field, PostgresDsn, RedisDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _find_and_load_env_file() -> Path | None:
+    """Find and load .env file if it exists, overriding existing env vars.
+
+    In production, .env files typically don't exist - environment variables
+    are set directly by the deployment system. This function gracefully
+    handles both cases.
+    """
+    current = Path(__file__).resolve()
+    # Walk up to find .env file (src/dataminer/core/config.py -> project root)
+    for parent in [current, *current.parents]:
+        env_file = parent / ".env"
+        if env_file.exists():
+            # Load with override=True to ensure .env values take precedence over
+            # any stale environment variables (useful in development)
+            load_dotenv(env_file, override=True)
+            return env_file
+    # No .env file found - rely on actual environment variables (production)
+    return None
+
+
+# Load .env file before Settings class is defined (no-op in production)
+_env_file_path = _find_and_load_env_file()
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_env_file_path,
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -44,8 +70,12 @@ class Settings(BaseSettings):
 
     # Database Settings
     database_url: PostgresDsn = Field(
-        default="postgresql://dataminer:password@localhost:5432/dataminer",
+        default="postgresql://postgres:postgres@localhost:5432/dataminer",
         description="Database URL",
+    )
+    test_database_url: str = Field(
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/dataminer_test",
+        description="Test database URL (async)",
     )
     db_echo: bool = Field(default=False, description="Echo SQL queries")
     db_pool_size: int = Field(default=5, description="Database pool size")
