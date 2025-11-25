@@ -29,7 +29,7 @@ def generate_schema_sql(output_file: str = "sql/schema/current_schema.sql") -> N
     db_url = str(settings.database_url)
 
     # Create temporary database for schema extraction
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urlunparse
 
     import psycopg2
     from psycopg2 import sql
@@ -73,7 +73,9 @@ def generate_schema_sql(output_file: str = "sql/schema/current_schema.sql") -> N
         print(f"✓ Created temporary database: {temp_db_name}")
 
         # Update database URL to use temp database
-        temp_url = db_url.replace(parsed.path, f"/{temp_db_name}")
+        # Use _replace to properly update only the path component
+        temp_parsed = parsed._replace(path=f"/{temp_db_name}")
+        temp_url = urlunparse(temp_parsed)
 
         # Run Alembic migrations on temp database
         import os
@@ -98,26 +100,18 @@ def generate_schema_sql(output_file: str = "sql/schema/current_schema.sql") -> N
                 print(f"STDERR:\n{e.stderr}")
             sys.exit(1)
 
-        # Extract schema using pg_dump
+        # Extract schema using pg_dump via Docker
         output_path = Path(output_file)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Build environment with password only if present
-        # Note: Only set PGPASSWORD when password exists to avoid:
-        #   1. Exposing empty credentials in environment
-        #   2. Overriding other auth methods (.pgpass, trust auth, peer auth)
-        # If password is missing, pg_dump will try other auth methods or fail with a clear error
-        pg_env = os.environ.copy()
-        if parsed.password:
-            pg_env["PGPASSWORD"] = parsed.password
-
+        # Use pg_dump from Docker container since it may not be installed locally
+        # The container name is 'dataminer-postgres' from docker-compose.yml
         dump_process = subprocess.run(
             [
+                "docker",
+                "exec",
+                "dataminer-postgres",
                 "pg_dump",
-                "--host",
-                parsed.hostname or "localhost",
-                "--port",
-                str(parsed.port or 5432),
                 "--username",
                 parsed.username or "postgres",
                 "--schema-only",
@@ -127,7 +121,7 @@ def generate_schema_sql(output_file: str = "sql/schema/current_schema.sql") -> N
             ],
             capture_output=True,
             text=True,
-            env=pg_env,
+            env=os.environ.copy(),
         )
 
         if dump_process.returncode != 0:
@@ -138,12 +132,24 @@ def generate_schema_sql(output_file: str = "sql/schema/current_schema.sql") -> N
                 print(f"STDERR:\n{dump_process.stderr}")
             sys.exit(1)
 
+        # Clean up pg_dump output for SQLC compatibility
+        schema_sql = dump_process.stdout
+
+        # Remove PostgreSQL-specific commands that SQLC can't parse
+        import re
+
+        # Remove \restrict and similar backslash commands
+        schema_sql = re.sub(r"^\\[a-z]+.*$", "", schema_sql, flags=re.MULTILINE)
+
+        # Remove empty lines at the start
+        schema_sql = schema_sql.lstrip("\n")
+
         # Write schema to file with header
         with output_path.open("w") as f:
             f.write("-- Schema for dataminer database\n")
             f.write("-- Auto-generated from Alembic migrations\n")
             f.write("-- DO NOT EDIT MANUALLY - Use 'make schema-generate' to regenerate\n\n")
-            f.write(dump_process.stdout)
+            f.write(schema_sql)
 
         print(f"✓ Schema SQL generated: {output_path}")
 

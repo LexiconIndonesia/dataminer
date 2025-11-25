@@ -1,4 +1,4 @@
-.PHONY: help install dev test test-cov lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down api-generate schema-generate sqlc-generate regenerate-all pre-commit pre-commit-install pre-commit-run security
+.PHONY: help install dev test test-unit test-integration test-cov test-fast test-watch lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down api-generate schema-generate sqlc-generate regenerate-all pre-commit pre-commit-install pre-commit-run security
 
 # Colors for output
 BLUE := \033[0;34m
@@ -28,8 +28,16 @@ dev: ## Run development server with hot reload
 
 # Testing
 test: ## Run all tests
-	@echo "$(BLUE)Running tests...$(NC)"
+	@echo "$(BLUE)Running all tests...$(NC)"
 	uv run pytest tests/ -v
+
+test-unit: ## Run unit tests only (no external dependencies)
+	@echo "$(BLUE)Running unit tests...$(NC)"
+	uv run pytest tests/unit/ -v
+
+test-integration: ## Run integration tests only (requires database)
+	@echo "$(BLUE)Running integration tests...$(NC)"
+	uv run pytest tests/integration/ -v
 
 test-cov: ## Run tests with coverage report
 	@echo "$(BLUE)Running tests with coverage...$(NC)"
