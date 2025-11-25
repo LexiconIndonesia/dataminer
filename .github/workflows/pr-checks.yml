@@ -77,7 +77,7 @@ jobs:
       - name: Install SQLC
         uses: sqlc-dev/setup-sqlc@v4
         with:
-          sqlc-version: '1.28.0'
+          sqlc-version: '1.30.0'
 
       - name: Generate API models
         run: make api-generate
@@ -112,6 +112,9 @@ jobs:
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     services:
       postgres:
         image: ghcr.io/lexiconindonesia/lexicon-postgresql-server:latest
@@ -158,7 +161,7 @@ jobs:
       - name: Install SQLC
         uses: sqlc-dev/setup-sqlc@v4
         with:
-          sqlc-version: '1.28.0'
+          sqlc-version: '1.30.0'
 
       - name: Generate API models
         run: make api-generate
@@ -168,7 +171,7 @@ jobs:
 
       - name: Run integration tests with coverage
         env:
-          DATABASE_URL: postgresql://dataminer:password@localhost:5432/dataminer
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379/1
         run: uv run pytest tests/integration/ -v --cov=src/dataminer --cov-report=term-missing --cov-report=xml
 
