@@ -1,7 +1,7 @@
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:16-alpine
+    image: ghcr.io/lexiconindonesia/lexicon-postgresql-server:latest
     container_name: dataminer-postgres
     environment:
       POSTGRES_USER: dataminer
