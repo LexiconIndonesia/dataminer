@@ -392,96 +392,96 @@ The system implements a source-aware processing pipeline with the following comp
 
 ### 5.1 Source Management
 
-**GET /api/v1/dataminer/sources**
+**GET /v1/dataminer/sources**
 - List all configured document sources
 - Filter by country, language, status
 - Include statistics and metrics
 
-**GET /api/v1/dataminer/sources/{source_id}**
+**GET /v1/dataminer/sources/{source_id}**
 - Get detailed source configuration
 - Include all profiles and fields
 - Return processing statistics
 
-**PUT /api/v1/dataminer/sources/{source_id}/config**
+**PUT /v1/dataminer/sources/{source_id}/config**
 - Update source configuration
 - Validate before applying
 - Support partial updates
 
-**POST /api/v1/dataminer/sources/{source_id}/profiles**
+**POST /v1/dataminer/sources/{source_id}/profiles**
 - Create new extraction profile
 - Clone from existing profile
 - Set as default option
 
 ### 5.2 Field Management
 
-**GET /api/v1/dataminer/sources/{source_id}/fields**
+**GET /v1/dataminer/sources/{source_id}/fields**
 - List all fields for source
 - Filter by category, status
 - Include extraction statistics
 
-**POST /api/v1/dataminer/sources/{source_id}/fields**
+**POST /v1/dataminer/sources/{source_id}/fields**
 - Add new field definition
 - Configure extraction method
 - Set validation rules
 
-**PUT /api/v1/dataminer/fields/{field_id}**
+**PUT /v1/dataminer/fields/{field_id}**
 - Update field configuration
 - Modify extraction method
 - Adjust confidence thresholds
 
 ### 5.3 Job Processing
 
-**POST /api/v1/dataminer/jobs**
+**POST /v1/dataminer/jobs**
 - Submit extraction job
 - Auto-detect source option
 - Override configurations
 - Set priority and metadata
 
-**GET /api/v1/dataminer/jobs/{job_id}**
+**GET /v1/dataminer/jobs/{job_id}**
 - Get job status and progress
 - Include cost tracking
 - Return detected source
 
-**GET /api/v1/dataminer/jobs/{job_id}/results**
+**GET /v1/dataminer/jobs/{job_id}/results**
 - Get extraction results
 - Include all attempts
 - Return confidence scores
 
-**POST /api/v1/dataminer/jobs/{job_id}/reprocess**
+**POST /v1/dataminer/jobs/{job_id}/reprocess**
 - Reprocess with different config
 - Target specific fields
 - Use different models
 
 ### 5.4 Review Management
 
-**GET /api/v1/dataminer/review/queue**
+**GET /v1/dataminer/review/queue**
 - Get review queue
 - Filter by source, language
 - Sort by priority
 
-**POST /api/v1/dataminer/review/{review_id}/submit**
+**POST /v1/dataminer/review/{review_id}/submit**
 - Submit review decisions
 - Approve/reject/modify
 - Add review notes
 
-**GET /api/v1/dataminer/review/stats**
+**GET /v1/dataminer/review/stats**
 - Review statistics
 - Per-source metrics
 - Reviewer performance
 
 ### 5.5 Configuration Management
 
-**GET /api/v1/dataminer/config/templates**
+**GET /v1/dataminer/config/templates**
 - List prompt templates
 - Filter by source, language
 - Include usage statistics
 
-**POST /api/v1/dataminer/config/templates**
+**POST /v1/dataminer/config/templates**
 - Create new template
 - Set source and language
 - Configure variables
 
-**GET /api/v1/dataminer/config/rules**
+**GET /v1/dataminer/config/rules**
 - List normalization rules
 - Filter by source, type
 - Include effectiveness metrics

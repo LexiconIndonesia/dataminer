@@ -769,10 +769,10 @@ def test_full_configuration_flow():
 ### Task 2.1: Source Management Endpoints
 
 **Actionable Items:**
-- [x] Implement `GET /api/v1/dataminer/sources` - List all sources
-- [x] Implement `GET /api/v1/dataminer/sources/{source_id}` - Get source details
-- [x] Implement `PUT /api/v1/dataminer/sources/{source_id}/config` - Update source config
-- [x] Implement `POST /api/v1/dataminer/sources/{source_id}/profiles` - Create profile
+- [x] Implement `GET /v1/dataminer/sources` - List all sources
+- [x] Implement `GET /v1/dataminer/sources/{source_id}` - Get source details
+- [x] Implement `PUT /v1/dataminer/sources/{source_id}/config` - Update source config
+- [x] Implement `POST /v1/dataminer/sources/{source_id}/profiles` - Create profile
 - [x] Add request validation with Pydantic models
 - [x] Add response serialization
 - [x] Add error handling and appropriate HTTP status codes
@@ -806,7 +806,7 @@ def test_full_configuration_flow():
 ```python
 def test_list_sources_empty():
     """Test listing sources when none exist"""
-    response = client.get("/api/v1/dataminer/sources")
+    response = client.get("/v1/dataminer/sources")
     assert response.status_code == 200
     assert response.json() == []
 
@@ -815,7 +815,7 @@ def test_list_sources_with_data():
     create_source(source_id="ID_SC", ...)
     create_source(source_id="SG_SC", ...)
 
-    response = client.get("/api/v1/dataminer/sources")
+    response = client.get("/v1/dataminer/sources")
     assert response.status_code == 200
     assert len(response.json()) == 2
 
@@ -823,13 +823,13 @@ def test_get_source_by_id():
     """Test retrieving specific source"""
     create_source(source_id="ID_SC", ...)
 
-    response = client.get("/api/v1/dataminer/sources/ID_SC")
+    response = client.get("/v1/dataminer/sources/ID_SC")
     assert response.status_code == 200
     assert response.json()["source_id"] == "ID_SC"
 
 def test_get_nonexistent_source():
     """Test retrieving non-existent source"""
-    response = client.get("/api/v1/dataminer/sources/INVALID")
+    response = client.get("/v1/dataminer/sources/INVALID")
     assert response.status_code == 404
 
 def test_update_source_config():
@@ -837,7 +837,7 @@ def test_update_source_config():
     create_source(source_id="ID_SC", ...)
 
     response = client.put(
-        "/api/v1/dataminer/sources/ID_SC/config",
+        "/v1/dataminer/sources/ID_SC/config",
         json={"avg_cost_per_document": 1.75}
     )
     assert response.status_code == 200
@@ -848,7 +848,7 @@ def test_create_profile():
     create_source(source_id="ID_SC", ...)
 
     response = client.post(
-        "/api/v1/dataminer/sources/ID_SC/profiles",
+        "/v1/dataminer/sources/ID_SC/profiles",
         json={
             "profile_name": "High Accuracy Profile",
             "llm_model_detailed": "gemini-1.5-pro",
@@ -864,7 +864,7 @@ def test_create_duplicate_profile():
     create_profile(source_id="ID_SC", profile_name="Default", ...)
 
     response = client.post(
-        "/api/v1/dataminer/sources/ID_SC/profiles",
+        "/v1/dataminer/sources/ID_SC/profiles",
         json={"profile_name": "Default", ...}
     )
     assert response.status_code == 409
@@ -876,7 +876,7 @@ def test_create_duplicate_profile():
 def test_source_lifecycle():
     """Test complete source lifecycle"""
     # Create source
-    response = client.post("/api/v1/dataminer/sources", json={
+    response = client.post("/v1/dataminer/sources", json={
         "source_id": "TEST_SC",
         "source_name": "Test Court",
         ...
@@ -884,22 +884,22 @@ def test_source_lifecycle():
     assert response.status_code == 201
 
     # List sources
-    response = client.get("/api/v1/dataminer/sources")
+    response = client.get("/v1/dataminer/sources")
     assert any(s["source_id"] == "TEST_SC" for s in response.json())
 
     # Get source details
-    response = client.get("/api/v1/dataminer/sources/TEST_SC")
+    response = client.get("/v1/dataminer/sources/TEST_SC")
     assert response.status_code == 200
 
     # Update source
     response = client.put(
-        "/api/v1/dataminer/sources/TEST_SC/config",
+        "/v1/dataminer/sources/TEST_SC/config",
         json={"is_active": False}
     )
     assert response.status_code == 200
 
     # Verify update
-    response = client.get("/api/v1/dataminer/sources/TEST_SC")
+    response = client.get("/v1/dataminer/sources/TEST_SC")
     assert response.json()["is_active"] is False
 ```
 
@@ -910,13 +910,13 @@ def test_source_lifecycle():
 ### Task 3.1: Field Definition Endpoints
 
 **Actionable Items:**
-- [ ] Implement `GET /api/v1/dataminer/sources/{source_id}/fields` - List fields
-- [ ] Implement `POST /api/v1/dataminer/sources/{source_id}/fields` - Create field
-- [ ] Implement `GET /api/v1/dataminer/fields/{field_id}` - Get field details
-- [ ] Implement `PUT /api/v1/dataminer/fields/{field_id}` - Update field
-- [ ] Implement `DELETE /api/v1/dataminer/fields/{field_id}` - Delete field
-- [ ] Add filtering by category, field_type, is_required
-- [ ] Add pagination for large field lists
+- [x] Implement `GET /v1/dataminer/sources/{source_id}/fields` - List fields
+- [x] Implement `POST /v1/dataminer/sources/{source_id}/fields` - Create field
+- [x] Implement `GET /v1/dataminer/fields/{field_id}` - Get field details
+- [x] Implement `PUT /v1/dataminer/fields/{field_id}` - Update field
+- [x] Implement `DELETE /v1/dataminer/fields/{field_id}` - Delete field
+- [x] Add filtering by category, field_type, is_required
+- [x] Add pagination for large field lists
 - [ ] Add field extraction statistics
 
 **Positive Cases:**
@@ -949,7 +949,7 @@ def test_list_fields_for_source():
     create_field(source_id="ID_SC", field_name="case_number", ...)
     create_field(source_id="ID_SC", field_name="defendant_name", ...)
 
-    response = client.get("/api/v1/dataminer/sources/ID_SC/fields")
+    response = client.get("/v1/dataminer/sources/ID_SC/fields")
     assert response.status_code == 200
     assert len(response.json()) == 2
 
@@ -960,7 +960,7 @@ def test_filter_fields_by_category():
     create_field(source_id="ID_SC", field_category="standard", ...)
 
     response = client.get(
-        "/api/v1/dataminer/sources/ID_SC/fields?category=critical"
+        "/v1/dataminer/sources/ID_SC/fields?category=critical"
     )
     assert response.status_code == 200
     assert all(f["field_category"] == "critical" for f in response.json())
@@ -970,7 +970,7 @@ def test_create_field():
     create_source(source_id="ID_SC", ...)
 
     response = client.post(
-        "/api/v1/dataminer/sources/ID_SC/fields",
+        "/v1/dataminer/sources/ID_SC/fields",
         json={
             "field_name": "verdict_date",
             "field_type": "date",
@@ -988,7 +988,7 @@ def test_update_field():
     field = create_field(source_id="ID_SC", field_name="test_field", ...)
 
     response = client.put(
-        f"/api/v1/dataminer/fields/{field.field_id}",
+        f"/v1/dataminer/fields/{field.field_id}",
         json={"confidence_threshold": 0.85}
     )
     assert response.status_code == 200
@@ -999,11 +999,11 @@ def test_delete_field():
     create_source(source_id="ID_SC", ...)
     field = create_field(source_id="ID_SC", field_name="temp_field", ...)
 
-    response = client.delete(f"/api/v1/dataminer/fields/{field.field_id}")
+    response = client.delete(f"/v1/dataminer/fields/{field.field_id}")
     assert response.status_code == 204
 
     # Verify deletion
-    response = client.get(f"/api/v1/dataminer/fields/{field.field_id}")
+    response = client.get(f"/v1/dataminer/fields/{field.field_id}")
     assert response.status_code == 404
 ```
 

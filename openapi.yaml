@@ -49,13 +49,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadinessResponse'
-  /api/v1/dataminer/sources:
+  /v1/dataminer/sources:
     get:
       tags:
       - sources
       summary: List all document sources
       description: Get a list of all configured document sources
-      operationId: list_sources_api_v1_dataminer_sources_get
+      operationId: list_sources_v1_dataminer_sources_get
       responses:
         '200':
           description: Successful Response
@@ -66,13 +66,13 @@ paths:
                   $ref: '#/components/schemas/DocumentSourceResponse'
                 type: array
                 title: Response List Sources Api V1 Dataminer Sources Get
-  /api/v1/dataminer/sources/{source_id}:
+  /v1/dataminer/sources/{source_id}:
     get:
       tags:
       - sources
       summary: Get source details
       description: Get detailed information about a specific document source
-      operationId: get_source_api_v1_dataminer_sources__source_id__get
+      operationId: get_source_v1_dataminer_sources__source_id__get
       parameters:
       - name: source_id
         in: path
@@ -95,13 +95,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/v1/dataminer/sources/{source_id}/config:
+  /v1/dataminer/sources/{source_id}/config:
     put:
       tags:
       - sources
       summary: Update source configuration
       description: Update configuration for an existing document source
-      operationId: update_source_config_api_v1_dataminer_sources__source_id__config_put
+      operationId: update_source_config_v1_dataminer_sources__source_id__config_put
       parameters:
       - name: source_id
         in: path
@@ -130,13 +130,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/v1/dataminer/sources/{source_id}/profiles:
+  /v1/dataminer/sources/{source_id}/profiles:
     get:
       tags:
       - sources
       summary: List extraction profiles
       description: Get all extraction profiles for a specific source
-      operationId: list_profiles_api_v1_dataminer_sources__source_id__profiles_get
+      operationId: list_profiles_v1_dataminer_sources__source_id__profiles_get
       parameters:
       - name: source_id
         in: path
@@ -168,7 +168,7 @@ paths:
       - sources
       summary: Create extraction profile
       description: Create a new extraction profile for a document source
-      operationId: create_profile_api_v1_dataminer_sources__source_id__profiles_post
+      operationId: create_profile_v1_dataminer_sources__source_id__profiles_post
       parameters:
       - name: source_id
         in: path
@@ -199,8 +199,548 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /v1/dataminer/sources/{source_id}/fields:
+    get:
+      tags:
+      - fields
+      summary: List field definitions
+      description: Get all field definitions for a specific source with optional filtering
+      operationId: list_fields_v1_dataminer_sources__source_id__fields_get
+      parameters:
+      - name: source_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Source Id
+      - name: category
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category
+          description: Filter by field category
+      - name: field_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Field Type
+          description: Filter by field type
+      - name: is_required
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Required
+          description: Filter by required status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+          title: Limit
+          description: Maximum number of results to return
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+          description: Number of results to skip
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldDefinitionListResponse'
+        '404':
+          description: Source not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - fields
+      summary: Create field definition
+      description: Create a new field definition for a document source
+      operationId: create_field_v1_dataminer_sources__source_id__fields_post
+      parameters:
+      - name: source_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Source Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldDefinitionCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldDefinitionResponse'
+        '404':
+          description: Source not found
+        '409':
+          description: Field with same name already exists
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/dataminer/fields/{field_id}:
+    get:
+      tags:
+      - fields
+      summary: Get field details
+      description: Get detailed information about a specific field definition
+      operationId: get_field_v1_dataminer_fields__field_id__get
+      parameters:
+      - name: field_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Field Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldDefinitionResponse'
+        '404':
+          description: Field not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - fields
+      summary: Update field definition
+      description: Update an existing field definition
+      operationId: update_field_v1_dataminer_fields__field_id__put
+      parameters:
+      - name: field_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Field Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldDefinitionUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldDefinitionResponse'
+        '404':
+          description: Field not found
+        '409':
+          description: Field with same name already exists
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - fields
+      summary: Delete field definition
+      description: Delete a field definition
+      operationId: delete_field_v1_dataminer_fields__field_id__delete
+      parameters:
+      - name: field_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Field Id
+      responses:
+        '204':
+          description: Field deleted successfully
+        '404':
+          description: Field not found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
+    FieldDefinitionResponse:
+      properties:
+        field_id:
+          type: string
+          format: uuid
+          title: Field Id
+        source_id:
+          type: string
+          title: Source Id
+        field_name:
+          type: string
+          maxLength: 100
+          title: Field Name
+          description: Internal field name (snake_case)
+        field_display_name:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Field Display Name
+          description: Human-readable display name
+        field_category:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Field Category
+          description: Category grouping (metadata, parties, decision, dates)
+        field_type:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Field Type
+          description: Data type (string, date, number, array, object)
+        extraction_method:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Extraction Method
+          description: How to extract this field (regex, llm, hybrid, rule_based)
+        extraction_section:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Extraction Section
+          description: Document section to search for this field
+        regex_pattern:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Regex Pattern
+          description: Regular expression pattern for regex extraction
+        llm_prompt_template_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Llm Prompt Template Id
+          description: Reference to prompt template for LLM extraction
+        is_required:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Required
+          description: Whether this field is required for valid extraction
+          default: false
+        validation_rules:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Validation Rules
+          description: JSON object with validation rules for the field
+        confidence_threshold:
+          anyOf:
+          - type: number
+            minimum: 0.0
+            maximum: 1.0
+          - type: string
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
+          - type: 'null'
+          title: Confidence Threshold
+          description: Minimum confidence score to accept extraction (0.00-1.00)
+          default: '0.75'
+        normalization_rules:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Normalization Rules
+          description: JSON object with normalization/transformation rules
+        display_order:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Display Order
+          description: Order in which to display this field in UI
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created At
+        updated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Updated At
+      type: object
+      required:
+      - field_id
+      - source_id
+      - field_name
+      title: FieldDefinitionResponse
+      description: Schema for field definition response.
+    FieldDefinitionCreate:
+      properties:
+        field_name:
+          type: string
+          maxLength: 100
+          title: Field Name
+          description: Internal field name (snake_case)
+        field_display_name:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Field Display Name
+          description: Human-readable display name
+        field_category:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Field Category
+          description: Category grouping (metadata, parties, decision, dates)
+        field_type:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Field Type
+          description: Data type (string, date, number, array, object)
+          default: string
+        extraction_method:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Extraction Method
+          description: How to extract this field (regex, llm, hybrid, rule_based)
+          default: llm
+        extraction_section:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Extraction Section
+          description: Document section to search for this field
+        regex_pattern:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Regex Pattern
+          description: Regular expression pattern for regex extraction
+        llm_prompt_template_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Llm Prompt Template Id
+          description: Reference to prompt template for LLM extraction
+        is_required:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Required
+          description: Whether this field is required for valid extraction
+          default: false
+        validation_rules:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Validation Rules
+          description: JSON object with validation rules for the field
+        confidence_threshold:
+          anyOf:
+          - type: number
+            minimum: 0.0
+            maximum: 1.0
+          - type: string
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
+          - type: 'null'
+          title: Confidence Threshold
+          description: Minimum confidence score to accept extraction (0.00-1.00)
+          default: '0.75'
+        normalization_rules:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Normalization Rules
+          description: JSON object with normalization/transformation rules
+        display_order:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Display Order
+          description: Order in which to display this field in UI
+      type: object
+      required:
+      - field_name
+      title: FieldDefinitionCreate
+      description: Schema for creating a new field definition.
+    FieldDefinitionUpdate:
+      properties:
+        field_name:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Field Name
+          description: Internal field name (snake_case)
+        field_display_name:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Field Display Name
+          description: Human-readable display name
+        field_category:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Field Category
+          description: Category grouping (metadata, parties, decision, dates)
+        field_type:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Field Type
+          description: Data type (string, date, number, array, object)
+        extraction_method:
+          anyOf:
+          - type: string
+            maxLength: 50
+          - type: 'null'
+          title: Extraction Method
+          description: How to extract this field (regex, llm, hybrid, rule_based)
+        extraction_section:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Extraction Section
+          description: Document section to search for this field
+        regex_pattern:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Regex Pattern
+          description: Regular expression pattern for regex extraction
+        llm_prompt_template_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Llm Prompt Template Id
+          description: Reference to prompt template for LLM extraction
+        is_required:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Required
+          description: Whether this field is required for valid extraction
+        validation_rules:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Validation Rules
+          description: JSON object with validation rules for the field
+        confidence_threshold:
+          anyOf:
+          - type: number
+            minimum: 0.0
+            maximum: 1.0
+          - type: string
+            pattern: ^[+-]?\d+(\.\d{1,2})?$
+          - type: 'null'
+          title: Confidence Threshold
+          description: Minimum confidence score to accept extraction (0.00-1.00)
+        normalization_rules:
+          anyOf:
+          - type: object
+          - type: 'null'
+          title: Normalization Rules
+          description: JSON object with normalization/transformation rules
+        display_order:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Display Order
+          description: Order in which to display this field in UI
+      type: object
+      title: FieldDefinitionUpdate
+      description: Schema for updating a field definition.
+    FieldDefinitionListResponse:
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldDefinitionResponse'
+          title: Items
+          description: List of field definitions
+        total:
+          type: integer
+          title: Total
+          description: Total number of fields matching the query
+        limit:
+          type: integer
+          title: Limit
+          description: Maximum number of results returned
+        offset:
+          type: integer
+          title: Offset
+          description: Number of results skipped
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      title: FieldDefinitionListResponse
+      description: Paginated list of field definitions.
     DocumentSourceResponse:
       properties:
         source_name:

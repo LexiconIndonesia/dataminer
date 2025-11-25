@@ -1289,7 +1289,7 @@ ORDER BY source_id, field_name;
 ### 6.1 Job Management
 
 ```
-POST /api/v1/dataminer/id_sc/jobs
+POST /v1/dataminer/id_sc/jobs
 Submit new extraction job for ID_SC document
 
 Request:
@@ -1319,7 +1319,7 @@ Response:
 ```
 
 ```
-GET /api/v1/dataminer/id_sc/jobs/{job_id}
+GET /v1/dataminer/id_sc/jobs/{job_id}
 Get job status and details
 
 Response:
@@ -1341,7 +1341,7 @@ Response:
 ```
 
 ```
-GET /api/v1/dataminer/id_sc/jobs/{job_id}/results
+GET /v1/dataminer/id_sc/jobs/{job_id}/results
 Get extraction results
 
 Response:
@@ -1386,7 +1386,7 @@ Response:
 ### 6.2 Review Management
 
 ```
-GET /api/v1/dataminer/id_sc/review/queue
+GET /v1/dataminer/id_sc/review/queue
 Get review queue
 
 Query params:
@@ -1417,7 +1417,7 @@ Response:
 ```
 
 ```
-POST /api/v1/dataminer/id_sc/review/{job_id}/submit
+POST /v1/dataminer/id_sc/review/{job_id}/submit
 Submit review corrections
 
 Request:
@@ -1456,7 +1456,7 @@ Response:
 ### 6.3 Configuration Management
 
 ```
-GET /api/v1/dataminer/id_sc/profiles
+GET /v1/dataminer/id_sc/profiles
 List extraction profiles
 
 Response:
@@ -1476,7 +1476,7 @@ Response:
 ```
 
 ```
-POST /api/v1/dataminer/id_sc/fields
+POST /v1/dataminer/id_sc/fields
 Add new field definition
 
 Request:

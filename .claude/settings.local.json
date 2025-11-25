@@ -6,7 +6,13 @@
       "Bash(uv run:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Bash(make sqlc-generate:*)",
+      "Bash(make api-generate:*)",
+      "Bash(make lint-fix:*)",
+      "Bash(make format:*)",
+      "Bash(make typecheck:*)",
+      "Bash(make check:*)"
     ],
     "deny": [],
     "ask": []
