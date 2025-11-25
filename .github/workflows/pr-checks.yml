@@ -121,7 +121,7 @@ jobs:
         env:
           POSTGRES_USER: dataminer
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: dataminer_test
+          POSTGRES_DB: dataminer
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -168,7 +168,7 @@ jobs:
 
       - name: Run integration tests with coverage
         env:
-          DATABASE_URL: postgresql://dataminer:password@localhost:5432/dataminer_test
+          DATABASE_URL: postgresql://dataminer:password@localhost:5432/dataminer
           REDIS_URL: redis://localhost:6379/1
         run: uv run pytest tests/integration/ -v --cov=src/dataminer --cov-report=term-missing --cov-report=xml
 
