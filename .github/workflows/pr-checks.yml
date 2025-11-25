@@ -70,6 +70,9 @@ jobs:
       - name: Install dependencies
         run: make install
 
+      - name: Generate API models
+        run: make api-generate
+
       - name: Run type checker
         run: make typecheck
 
@@ -115,6 +118,9 @@ jobs:
 
       - name: Install dependencies
         run: make install
+
+      - name: Generate API models
+        run: make api-generate
 
       - name: Run tests with coverage
         env:
