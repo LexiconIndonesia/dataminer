@@ -93,7 +93,7 @@ This project **does not use SQLAlchemy ORM**. Database access uses:
 - `src/dataminer/api/app.py` - FastAPI application factory with lifespan management
 - `src/dataminer/core/config.py` - Pydantic settings from environment variables
 - `src/dataminer/api/v1/` - API version 1 route handlers
-- `src/dataminer/db/queries/` - SQLC generated dataclasses and query methods
+- `src/dataminer/db/queries/` - SQLC-generated dataclasses and query methods
 - `src/dataminer/db/repositories/` - Data access layer using SQLC
 - `src/dataminer/services/` - External service integrations (OCR, LLM, queue)
 

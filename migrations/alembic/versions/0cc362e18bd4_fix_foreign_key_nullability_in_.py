@@ -137,12 +137,20 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     # Restore source_prompt_templates
+    # First drop the indexes and constraints created in upgrade
+    op.drop_index("idx_templates_source", table_name="source_prompt_templates")
+    op.drop_constraint(
+        "source_prompt_templates_source_id_template_name_version_key",
+        "source_prompt_templates",
+        type_="unique",
+    )
     op.alter_column(
         "source_prompt_templates",
         "source_id",
         existing_type=sa.VARCHAR(length=20),
         nullable=True,
     )
+    # Recreate indexes and constraints
     op.create_unique_constraint(
         "source_prompt_templates_source_id_template_name_version_key",
         "source_prompt_templates",
@@ -156,12 +164,15 @@ def downgrade() -> None:
     )
 
     # Restore source_normalization_rules
+    # First drop the index created in upgrade
+    op.drop_index("idx_rules_source", table_name="source_normalization_rules")
     op.alter_column(
         "source_normalization_rules",
         "source_id",
         existing_type=sa.VARCHAR(length=20),
         nullable=True,
     )
+    # Recreate index
     op.create_index(
         "idx_rules_source",
         "source_normalization_rules",
@@ -170,12 +181,21 @@ def downgrade() -> None:
     )
 
     # Restore source_field_definitions
+    # First drop the indexes and constraints created in upgrade
+    op.drop_index("idx_fields_category", table_name="source_field_definitions")
+    op.drop_index("idx_fields_source", table_name="source_field_definitions")
+    op.drop_constraint(
+        "source_field_definitions_source_id_field_name_key",
+        "source_field_definitions",
+        type_="unique",
+    )
     op.alter_column(
         "source_field_definitions",
         "source_id",
         existing_type=sa.VARCHAR(length=20),
         nullable=True,
     )
+    # Recreate indexes and constraints
     op.create_unique_constraint(
         "source_field_definitions_source_id_field_name_key",
         "source_field_definitions",
@@ -195,12 +215,21 @@ def downgrade() -> None:
     )
 
     # Restore source_extraction_profiles
+    # First drop the indexes and constraints created in upgrade
+    op.drop_index("idx_profiles_active", table_name="source_extraction_profiles")
+    op.drop_index("idx_profiles_source", table_name="source_extraction_profiles")
+    op.drop_constraint(
+        "source_extraction_profiles_source_id_profile_name_key",
+        "source_extraction_profiles",
+        type_="unique",
+    )
     op.alter_column(
         "source_extraction_profiles",
         "source_id",
         existing_type=sa.VARCHAR(length=20),
         nullable=True,
     )
+    # Recreate indexes and constraints
     op.create_unique_constraint(
         "source_extraction_profiles_source_id_profile_name_key",
         "source_extraction_profiles",

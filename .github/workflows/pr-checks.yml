@@ -112,9 +112,15 @@ jobs:
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     services:
       postgres:
         image: ghcr.io/lexiconindonesia/lexicon-postgresql-server:latest
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
         env:
           POSTGRES_USER: dataminer
           POSTGRES_PASSWORD: password
