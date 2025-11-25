@@ -55,21 +55,6 @@ jobs:
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: dataminer
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: dataminer_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -94,9 +79,7 @@ jobs:
         run: make api-generate
 
       - name: Generate SQLC queries
-        env:
-          DATABASE_URL: postgresql://dataminer:password@localhost:5432/dataminer_test
-        run: make sqlc-generate
+        run: sqlc generate
 
       - name: Run type checker
         run: make typecheck
@@ -153,9 +136,7 @@ jobs:
         run: make api-generate
 
       - name: Generate SQLC queries
-        env:
-          DATABASE_URL: postgresql://dataminer:password@localhost:5432/dataminer_test
-        run: make sqlc-generate
+        run: sqlc generate
 
       - name: Run tests with coverage
         env:

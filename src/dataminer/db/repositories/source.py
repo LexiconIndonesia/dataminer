@@ -49,7 +49,7 @@ class SourceRepository:
         """Create a new document source."""
         conn = await self.session.connection()
         querier = sources.AsyncQuerier(conn)
-        params = sources.CreateSourceParams(
+        return await querier.create_source(
             source_id=source_id,
             source_name=source_name,
             country_code=country_code,
@@ -60,7 +60,6 @@ class SourceRepository:
             is_active=is_active,
             phase=phase,
         )
-        return await querier.create_source(arg=params)
 
     async def update_source(
         self,
@@ -74,7 +73,7 @@ class SourceRepository:
         """Update document source configuration."""
         conn = await self.session.connection()
         querier = sources.AsyncQuerier(conn)
-        params = sources.UpdateSourceParams(
+        return await querier.update_source(
             source_id=source_id,
             source_name=source_name,
             is_active=is_active,
@@ -82,7 +81,6 @@ class SourceRepository:
             avg_accuracy=avg_accuracy,
             avg_cost_per_document=avg_cost_per_document,
         )
-        return await querier.update_source(arg=params)
 
     async def get_profiles_by_source(self, source_id: str) -> list[SourceExtractionProfile]:
         """Get all extraction profiles for a source."""

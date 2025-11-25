@@ -18,7 +18,7 @@ from uuid import uuid4
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 
-def generate_schema_sql(output_file: str = "sql/schema.sql") -> None:
+def generate_schema_sql(output_file: str = "sql/schema/current_schema.sql") -> None:
     """Generate schema SQL file from Alembic migrations."""
     print("Generating schema from Alembic migrations...")
 
@@ -175,8 +175,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         "-o",
-        default="sql/schema.sql",
-        help="Output file path (default: sql/schema.sql)",
+        default="sql/schema/current_schema.sql",
+        help="Output file path (default: sql/schema/current_schema.sql)",
     )
 
     args = parser.parse_args()

@@ -36,8 +36,9 @@ make db-reset             # Reset database (destroys data)
 ### Code Generation
 ```bash
 make api-generate         # Generate Pydantic models from openapi.yaml
-make schema-generate      # Generate sql/schema.sql from Alembic models
-make sqlc-generate        # Generate type-safe queries (runs schema-generate first)
+make sqlc-generate        # Generate type-safe queries (uses committed schema)
+make schema-generate      # Regenerate schema from database (after migrations)
+make regenerate-all       # Regenerate schema + SQLC code (after migrations)
 ```
 
 ## Architecture Overview
@@ -113,20 +114,30 @@ These files are auto-generated and must be regenerated locally:
 
 1. `src/dataminer/api/generated/models.py` - Run `make api-generate`
 2. `src/dataminer/db/queries/*.py` - Run `make sqlc-generate`
-3. `sql/schema.sql` - Run `make schema-generate`
 
 After pulling changes, regenerate with:
 ```bash
 make api-generate     # If openapi.yaml changed
-make sqlc-generate    # If migrations or sql/queries/*.sql changed
+make sqlc-generate    # If sql/queries/*.sql changed
+```
+
+### Schema Files (Git-Tracked)
+
+The `sql/schema/current_schema.sql` file is **committed to git**. This allows CI to generate SQLC code without a running database.
+
+After creating new migrations, regenerate and commit the schema:
+```bash
+make migrate           # Apply migrations
+make regenerate-all    # Regenerate schema + SQLC code
+git add sql/schema/    # Commit the updated schema
 ```
 
 ### Source of Truth Files (Git-Tracked)
 
 - `openapi.yaml` - API contract specification
-- `src/dataminer/db/models/*.py` - Database schema
 - `sql/queries/*.sql` - SQL query definitions for SQLC
-- `migrations/alembic/versions/*.py` - Database migrations
+- `sql/schema/current_schema.sql` - Database schema snapshot for SQLC
+- `migrations/alembic/versions/*.py` - Database migrations (source of truth for schema evolution)
 
 ## Key Development Patterns
 
@@ -155,10 +166,15 @@ make migration MSG="add user table"
 make migrate
 
 # 4. Regenerate schema and SQLC code
-make sqlc-generate
+make regenerate-all
+
+# 5. Commit both migration and updated schema
+git add migrations/ sql/schema/
+git commit -m "Add user table migration"
 ```
 
 **Important**: Always write both `upgrade()` and `downgrade()` SQL for reversibility.
+**Important**: Always commit the updated `sql/schema/current_schema.sql` along with migrations.
 
 ### Using Repository Pattern
 

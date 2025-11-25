@@ -1,4 +1,4 @@
-.PHONY: help install dev test test-cov lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down api-generate security
+.PHONY: help install dev test test-cov lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down api-generate schema-generate sqlc-generate regenerate-all pre-commit pre-commit-install pre-commit-run security
 
 # Colors for output
 BLUE := \033[0;34m
@@ -151,15 +151,19 @@ api-generate: ## Generate Pydantic models from OpenAPI spec (contract-first)
 		--disable-timestamp
 	@echo "$(GREEN)Generated models saved to src/dataminer/api/generated/models.py$(NC)"
 
-schema-generate: ## Generate SQL schema from Alembic models
-	@echo "$(BLUE)Generating SQL schema...$(NC)"
+schema-generate: ## Generate SQL schema from database (requires running PostgreSQL)
+	@echo "$(BLUE)Generating SQL schema from database...$(NC)"
 	uv run python scripts/generate_schema.py
-	@echo "$(GREEN)SQL schema generated$(NC)"
+	@echo "$(GREEN)SQL schema generated in sql/schema/current_schema.sql$(NC)"
+	@echo "$(BLUE)Note: Commit the updated schema file after migrations$(NC)"
 
-sqlc-generate: schema-generate ## Generate type-safe SQL code with SQLC
+sqlc-generate: ## Generate type-safe SQL code with SQLC (uses committed schema)
 	@echo "$(BLUE)Generating SQLC code...$(NC)"
 	sqlc generate
 	@echo "$(GREEN)SQLC code generated in src/dataminer/db/queries$(NC)"
+
+regenerate-all: schema-generate sqlc-generate ## Regenerate schema and SQLC code (after migrations)
+	@echo "$(GREEN)Schema and SQLC code regenerated$(NC)"
 
 # Maintenance
 clean: ## Clean build artifacts and caches
@@ -180,13 +184,15 @@ clean-all: clean ## Clean everything including venv
 	@echo "$(GREEN)All clean$(NC)"
 
 # Pre-commit hooks
+pre-commit: ## Run pre-commit hooks on all files
+	@echo "$(BLUE)Running pre-commit hooks...$(NC)"
+	uv run pre-commit run --all-files
+
 pre-commit-install: ## Install pre-commit hooks
 	@echo "$(BLUE)Installing pre-commit hooks...$(NC)"
 	uv run pre-commit install
 
-pre-commit-run: ## Run pre-commit hooks on all files
-	@echo "$(BLUE)Running pre-commit hooks...$(NC)"
-	uv run pre-commit run --all-files
+pre-commit-run: pre-commit ## Alias for pre-commit
 
 # Info
 version: ## Show project version
