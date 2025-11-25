@@ -70,8 +70,16 @@ jobs:
       - name: Install dependencies
         run: make install
 
+      - name: Install SQLC
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: '1.28.0'
+
       - name: Generate API models
         run: make api-generate
+
+      - name: Generate SQLC queries
+        run: make sqlc-generate
 
       - name: Run type checker
         run: make typecheck
@@ -119,8 +127,16 @@ jobs:
       - name: Install dependencies
         run: make install
 
+      - name: Install SQLC
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: '1.28.0'
+
       - name: Generate API models
         run: make api-generate
+
+      - name: Generate SQLC queries
+        run: make sqlc-generate
 
       - name: Run tests with coverage
         env:
