@@ -240,5 +240,5 @@ When adding dependencies:
 uv add package-name              # Production dependency
 uv add --dev package-name        # Dev dependency
 ```
-- Always run pre-commit after doing a tesk
+- Always run pre-commit after doing a task
 - Always run the tests after making changes, make sure all the tests pass

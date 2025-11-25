@@ -9,6 +9,10 @@ on:
 env:
   PYTHON_VERSION: "3.13"  # 3.14 not yet available in GitHub Actions
 
+# Minimal permissions for security (CodeQL best practice)
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint Code
@@ -110,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17-alpine
+        image: ghcr.io/lexiconindonesia/lexicon-postgresql-server:latest
         env:
           POSTGRES_USER: dataminer
           POSTGRES_PASSWORD: password

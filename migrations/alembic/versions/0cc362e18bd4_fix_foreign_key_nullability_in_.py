@@ -39,6 +39,24 @@ def upgrade() -> None:
         existing_type=sa.VARCHAR(length=20),
         nullable=False,
     )
+    # Recreate constraints and indexes for source_extraction_profiles
+    op.create_unique_constraint(
+        "source_extraction_profiles_source_id_profile_name_key",
+        "source_extraction_profiles",
+        ["source_id", "profile_name"],
+    )
+    op.create_index(
+        "idx_profiles_source",
+        "source_extraction_profiles",
+        ["source_id"],
+        unique=False,
+    )
+    op.create_index(
+        "idx_profiles_active",
+        "source_extraction_profiles",
+        ["source_id", "is_active"],
+        unique=False,
+    )
 
     # source_field_definitions
     op.drop_index("idx_fields_category", table_name="source_field_definitions")
@@ -54,6 +72,24 @@ def upgrade() -> None:
         existing_type=sa.VARCHAR(length=20),
         nullable=False,
     )
+    # Recreate constraints and indexes for source_field_definitions
+    op.create_unique_constraint(
+        "source_field_definitions_source_id_field_name_key",
+        "source_field_definitions",
+        ["source_id", "field_name"],
+    )
+    op.create_index(
+        "idx_fields_source",
+        "source_field_definitions",
+        ["source_id"],
+        unique=False,
+    )
+    op.create_index(
+        "idx_fields_category",
+        "source_field_definitions",
+        ["source_id", "field_category"],
+        unique=False,
+    )
 
     # source_normalization_rules
     op.drop_index("idx_rules_source", table_name="source_normalization_rules")
@@ -62,6 +98,13 @@ def upgrade() -> None:
         "source_id",
         existing_type=sa.VARCHAR(length=20),
         nullable=False,
+    )
+    # Recreate index for source_normalization_rules
+    op.create_index(
+        "idx_rules_source",
+        "source_normalization_rules",
+        ["source_id", "is_active"],
+        unique=False,
     )
 
     # source_prompt_templates
@@ -76,6 +119,18 @@ def upgrade() -> None:
         "source_id",
         existing_type=sa.VARCHAR(length=20),
         nullable=False,
+    )
+    # Recreate constraints and indexes for source_prompt_templates
+    op.create_unique_constraint(
+        "source_prompt_templates_source_id_template_name_version_key",
+        "source_prompt_templates",
+        ["source_id", "template_name", "version"],
+    )
+    op.create_index(
+        "idx_templates_source",
+        "source_prompt_templates",
+        ["source_id", "is_active"],
+        unique=False,
     )
 
 

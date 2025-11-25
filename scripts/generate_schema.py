@@ -149,7 +149,8 @@ def generate_schema_sql(output_file: str = "sql/schema/current_schema.sql") -> N
             f.write("-- Schema for dataminer database\n")
             f.write("-- Auto-generated from Alembic migrations\n")
             f.write("-- DO NOT EDIT MANUALLY - Use 'make schema-generate' to regenerate\n\n")
-            f.write(schema_sql)
+            f.write(schema_sql.rstrip())
+            f.write("\n")  # Ensure trailing newline for pre-commit
 
         print(f"✓ Schema SQL generated: {output_path}")
 

@@ -768,11 +768,27 @@ ALTER TABLE ONLY public.source_extraction_profiles
 
 
 --
+-- Name: source_extraction_profiles source_extraction_profiles_source_id_profile_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.source_extraction_profiles
+    ADD CONSTRAINT source_extraction_profiles_source_id_profile_name_key UNIQUE (source_id, profile_name);
+
+
+--
 -- Name: source_field_definitions source_field_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.source_field_definitions
     ADD CONSTRAINT source_field_definitions_pkey PRIMARY KEY (field_id);
+
+
+--
+-- Name: source_field_definitions source_field_definitions_source_id_field_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.source_field_definitions
+    ADD CONSTRAINT source_field_definitions_source_id_field_name_key UNIQUE (source_id, field_name);
 
 
 --
@@ -789,6 +805,56 @@ ALTER TABLE ONLY public.source_normalization_rules
 
 ALTER TABLE ONLY public.source_prompt_templates
     ADD CONSTRAINT source_prompt_templates_pkey PRIMARY KEY (template_id);
+
+
+--
+-- Name: source_prompt_templates source_prompt_templates_source_id_template_name_version_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.source_prompt_templates
+    ADD CONSTRAINT source_prompt_templates_source_id_template_name_version_key UNIQUE (source_id, template_name, version);
+
+
+--
+-- Name: idx_fields_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_fields_category ON public.source_field_definitions USING btree (source_id, field_category);
+
+
+--
+-- Name: idx_fields_source; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_fields_source ON public.source_field_definitions USING btree (source_id);
+
+
+--
+-- Name: idx_profiles_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_profiles_active ON public.source_extraction_profiles USING btree (source_id, is_active);
+
+
+--
+-- Name: idx_profiles_source; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_profiles_source ON public.source_extraction_profiles USING btree (source_id);
+
+
+--
+-- Name: idx_rules_source; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rules_source ON public.source_normalization_rules USING btree (source_id, is_active);
+
+
+--
+-- Name: idx_templates_source; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_templates_source ON public.source_prompt_templates USING btree (source_id, is_active);
 
 
 --
