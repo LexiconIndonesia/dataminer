@@ -25,11 +25,11 @@ The Indonesian Supreme Court (Mahkamah Agung) document mining module is the prim
 | **Typical Length** | 10-200 pages (corruption cases typically 50-150 pages) |
 | **Update Frequency** | Daily |
 | **Volume Target** | 10-20 documents daily |
-| **Field Count** | **72 fields** (optimized for corruption cases) |
+| **Field Count** | **69 fields** (optimized for corruption cases) |
 
 ### 1.3 Key Objectives
 
-- Extract **72 structured fields** from Indonesian corruption case judgments (Tindak Pidana Korupsi)
+- Extract **69 structured fields** from Indonesian corruption case judgments (Tindak Pidana Korupsi)
 - Focus on **corruption cases** with detailed financial tracking:
   - State losses (Kerugian Negara)
   - Restitution payments (Uang Pengganti)
@@ -39,7 +39,7 @@ The Indonesian Supreme Court (Mahkamah Agung) document mining module is the prim
 - Process Rupiah currency values (often in billions) with high accuracy
 - Extract hierarchical charge structures (Dakwaan Primair/Subsidair)
 - Compare prosecutor demands (Tuntutan) vs. actual verdict (Amar)
-- Extract mitigating and aggravating factors (5+ factors each)
+- Extract mitigating and aggravating factors (as arrays, no fixed limit)
 - Identify all parties: judges, prosecutors, defense lawyers, auditors (BPKP/BPK)
 - Maintain >90% accuracy for critical fields (identifiers, financial amounts, sentences)
 - Keep processing cost <$2 per document average
@@ -159,7 +159,7 @@ Contains:
 
 ### 3.1 Field Categories
 
-Based on actual requirements, the ID_SC extraction involves **77 fields** organized into the following categories:
+Based on actual requirements, the ID_SC extraction involves **69 fields** organized into the following categories:
 
 | Category | Count | Accuracy Target | Review Trigger | Description |
 |----------|-------|-----------------|----------------|-------------|
@@ -171,9 +171,9 @@ Based on actual requirements, the ID_SC extraction involves **77 fields** organi
 | Prosecution Demands (Tuntutan) | 7 | >85% | <85% confidence | Prosecutor's sentence demands |
 | Verdict Information (Amar) | 16 | >92% | <90% confidence | Final verdict, sentences, penalties |
 | Financial & Corruption Details | 9 | >90% | <88% confidence | State losses, restitution, corruption money |
-| Mitigating & Aggravating Factors | 10 | >75% | <70% confidence | Court's reasoning for sentencing |
+| Mitigating & Aggravating Factors | 2 | >75% | <70% confidence | Court's reasoning for sentencing (as arrays) |
 
-**Total: 77 fields** (+2 including derived fields)
+**Total: 69 fields** (+2 including derived fields)
 
 **Note:** This field structure is optimized for **corruption cases (Tindak Pidana Korupsi)** which include detailed financial tracking, state losses, and restitution payments. For other case types (narcotics, general criminal), some financial fields may be null.
 
@@ -243,20 +243,20 @@ Based on actual requirements, the ID_SC extraction involves **77 fields** organi
 
 | No | Field ID (Parameter Name) | Indonesian Name | Type | Example | Extraction Source |
 |----|---------------------------|----------------|------|---------|-------------------|
-| 25 | `defense_lawyer_name` | NAMA PH (Penasehat Hukum) | Text (multi) | "Budiman, S.H.; Siti, S.H., M.H." | IDENTITAS/header - LLM |
+| 25 | `defense_lawyer_name` | NAMA PH (Penasehat Hukum) | TEXT[] | ["Budiman, S.H.", "Siti, S.H., M.H."] | IDENTITAS/header - LLM |
 | 26 | `defense_lawyer_office_address` | KANTOR DAN ALAMAT PH | String | "Kantor Hukum ABC, Jl. Thamrin" | IDENTITAS - LLM |
-| 27 | `prosecutor_name` | NAMA JAKSA | Text (multi) | "Andi Wijaya, S.H.; Rini Susanti, S.H." | TUNTUTAN/footer - LLM |
+| 27 | `prosecutor_name` | NAMA JAKSA | TEXT[] | ["Andi Wijaya, S.H.", "Rini Susanti, S.H."] | TUNTUTAN/footer - LLM |
 | 28 | `court_clerk_name` | NAMA PANITERA | String | "Rudi Hartono" | Footer/signature - LLM |
-| - | `judge_name` | NAMA HAKIM | Text (multi) | "Bambang, S.H. (Ketua); Siti, S.H.; Ahmad, S.H." | MAJELIS HAKIM - LLM |
+| - | `judge_name` | NAMA HAKIM | TEXT[] | ["Bambang, S.H. (Ketua)", "Siti, S.H.", "Ahmad, S.H."] | MAJELIS HAKIM - LLM |
 
 **Validation Rules:**
 - Names should include professional titles (S.H., M.H., etc.)
-- Defense lawyer can be null if defendant has no lawyer
+- Defense lawyer can be empty array (`[]`) if defendant has no lawyer
 - Prosecutor and court clerk are required fields
-- **Multi-value fields**: Use semicolon (`;`) separator for multiple lawyers/prosecutors/judges
-  - Example: "Name1, S.H.; Name2, S.H., M.H."
-  - Preserve commas within individual names
-  - Store as single TEXT field in database
+- **Multi-value fields**: Stored as PostgreSQL `TEXT[]` arrays
+  - Each name is a separate array element
+  - Preserve commas within individual names (e.g., "S.H., M.H." stays intact)
+  - API returns JSON arrays for these fields
 
 ### 3.5 Charge Information - Dakwaan (9 fields)
 
@@ -329,32 +329,23 @@ Based on actual requirements, the ID_SC extraction involves **77 fields** organi
 - State loss verdict should be ≤ state_loss_charged
 - All currency fields in Rupiah (integer)
 
-### 3.8 Mitigating & Aggravating Factors (10+ fields)
+### 3.8 Mitigating & Aggravating Factors (2 fields)
 
 | No | Field ID (Parameter Name) | Indonesian Name | Type | Example | Extraction Source |
 |----|---------------------------|----------------|------|---------|-------------------|
-| 61 | `aggravating_factor_1` | ALASAN MEMBERATKAN I | String | "Perbuatan terdakwa merugikan negara" | PERTIMBANGAN - LLM |
-| 62 | `aggravating_factor_2` | ALASAN MEMBERATKAN II | String | "Tidak mendukung program pemerintah" | PERTIMBANGAN - LLM |
-| 63 | `aggravating_factor_3` | ALASAN MEMBERATKAN III | String | null | PERTIMBANGAN - LLM |
-| 64 | `aggravating_factor_4` | ALASAN MEMBERATKAN IV | String | null | PERTIMBANGAN - LLM |
-| 65 | `aggravating_factor_5` | ALASAN MEMBERATKAN V | String | null | PERTIMBANGAN - LLM |
-| 66 | `mitigating_factor_1` | ALASAN MERINGANKAN I | String | "Terdakwa bersikap sopan" | PERTIMBANGAN - LLM |
-| 67 | `mitigating_factor_2` | ALASAN MERINGANKAN II | String | "Terdakwa belum pernah dihukum" | PERTIMBANGAN - LLM |
-| 68 | `mitigating_factor_3` | ALASAN MERINGANKAN III | String | "Terdakwa menyesali perbuatannya" | PERTIMBANGAN - LLM |
-| 69 | `mitigating_factor_4` | ALASAN MERINGANKAN IV | String | "Terdakwa memiliki tanggungan keluarga" | PERTIMBANGAN - LLM |
-| 70 | `mitigating_factor_5` | ALASAN MERINGANKAN V | String | null | PERTIMBANGAN - LLM |
-| 71 | `mitigating_factor_6` | ALASAN MERINGANKAN VI | String | null | PERTIMBANGAN - LLM |
-| 72 | `mitigating_factor_7` | ALASAN MERINGANKAN VII | String | null | PERTIMBANGAN - LLM |
+| 61 | `aggravating_factor` | ALASAN MEMBERATKAN | TEXT[] | ["Perbuatan terdakwa merugikan negara", "Tidak mendukung program pemerintah"] | PERTIMBANGAN - LLM |
+| 62 | `mitigating_factor` | ALASAN MERINGANKAN | TEXT[] | ["Terdakwa bersikap sopan", "Terdakwa belum pernah dihukum", "Terdakwa menyesali perbuatannya", "Terdakwa memiliki tanggungan keluarga"] | PERTIMBANGAN - LLM |
 
 **Validation Rules:**
-- Fields can be null if not mentioned in verdict
+- Arrays can be empty (`[]`) if not mentioned in verdict
 - Extract in order as they appear in PERTIMBANGAN HUKUM section
 - Typically 2-3 aggravating factors and 3-5 mitigating factors
 - Extract as direct quotes from document where possible
+- No limit on number of factors - extract all that are found
 
 ### 3.9 Field Summary
 
-**Total Fields: 77** (not including derived fields like verdict_day_of_week, verdict_ruling_day_of_week)
+**Total Fields: 69** (not including derived fields like verdict_day_of_week, verdict_ruling_day_of_week)
 
 **Required Fields** (must extract with high confidence):
 - Document info: `case_registration_number`, `verdict_number`, `verdict_date`
@@ -367,13 +358,13 @@ Based on actual requirements, the ID_SC extraction involves **77 fields** organi
 - `state_loss_recovered`
 - `state_loss_auditor`
 
-**Optional Fields** (may be null):
+**Optional Fields** (may be null or empty array):
 - Detention: `detention_start_date`, `detention_end_date`, `detention_type` (if defendant was not detained)
 - `defense_lawyer_name`, `defense_lawyer_office_address` (if no defense lawyer)
 - `defense_objection` (if no defense objection)
 - `article_charged_third`, `article_charged_fourth`
-- `aggravating_factor_3` through `aggravating_factor_5`
-- `mitigating_factor_5` through `mitigating_factor_7`
+- `aggravating_factor` (can be empty array if not mentioned)
+- `mitigating_factor` (can be empty array if not mentioned)
 
 **Critical Validation Rules:**
 - **Detention Date Cap**: `detention_end_date` cannot exceed `verdict_date`. If extracted value > verdict_date, automatically set `detention_end_date = verdict_date`
@@ -382,26 +373,26 @@ Based on actual requirements, the ID_SC extraction involves **77 fields** organi
 
 **Multi-Value Fields:**
 
-Some fields can contain multiple values. Store as **single TEXT field** with **semicolon (`;`) separator**:
+Some fields can contain multiple values. Store as **array type** (`TEXT[]`):
 
 | Field | Can Have Multiple Values | Example | Storage Format |
 |-------|-------------------------|---------|----------------|
-| `defense_lawyer_name` | ✅ Yes | "Ahmad Budiman, S.H.; Siti Rahma, S.H., M.H." | Single TEXT with `;` separator |
-| `prosecutor_name` | ✅ Yes | "Andi Wijaya, S.H.; Rini Susanti, S.H." | Single TEXT with `;` separator |
-| `judge_name` | ✅ Yes (panel) | "Dr. Bambang, S.H. (Ketua); Siti, S.H.; Ahmad, S.H." | Single TEXT with `;` separator |
-| `aggravating_factor_1-5` | ❌ No | One value per field | Separate fields |
-| `mitigating_factor_1-7` | ❌ No | One value per field | Separate fields |
+| `defense_lawyer_name` | ✅ Yes | ["Ahmad Budiman, S.H.", "Siti Rahma, S.H., M.H."] | `TEXT[]` array |
+| `prosecutor_name` | ✅ Yes | ["Andi Wijaya, S.H.", "Rini Susanti, S.H."] | `TEXT[]` array |
+| `judge_name` | ✅ Yes (panel) | ["Dr. Bambang, S.H. (Ketua)", "Siti, S.H.", "Ahmad, S.H."] | `TEXT[]` array |
+| `aggravating_factor` | ✅ Yes | ["Perbuatan merugikan negara", "Tidak mendukung pemerintah"] | `TEXT[]` array |
+| `mitigating_factor` | ✅ Yes | ["Terdakwa sopan", "Belum pernah dihukum", "Menyesali perbuatan"] | `TEXT[]` array |
 
-**Separator Rules:**
-- Use **semicolon (`;`)** as primary separator for multiple values
-- Preserve commas within names (e.g., "S.H., M.H." stays intact)
-- Trim whitespace around each value after splitting
-- Example parsing: `"Name1, S.H.; Name2, S.H., M.H.".split(';').map(s => s.trim())`
+**Array Storage Rules:**
+- Use PostgreSQL `TEXT[]` array type for multi-value fields
+- Each element is a separate entry in the array
+- Preserve commas within names (e.g., "S.H., M.H." stays intact as part of a single element)
+- Empty arrays (`{}`) for no values, not NULL
 
 **Database Storage:**
-- All multi-value fields stored as `TEXT` type
-- No array types used for compatibility
-- Application layer handles splitting/joining
+- Multi-value fields stored as `TEXT[]` array type
+- Native PostgreSQL array operations supported
+- API returns JSON arrays for these fields
 
 ---
 
@@ -493,7 +484,7 @@ Pass 1: Quick Scan (Gemini Flash)
 - Cost: ~$0.10 per document
 
 Pass 2: Detailed Extraction (Gemini Pro)
-- Extract all 65+ fields
+- Extract all 69 fields
 - Process each section with targeted prompts
 - Extract hierarchical data (charges, evidence)
 - Cost: ~$0.80 per document
@@ -1128,11 +1119,11 @@ CREATE TABLE IF NOT EXISTS id_sc.approved_extractions (
     detention_deducted BOOLEAN DEFAULT true,
 
     -- Legal Representatives (4 fields)
-    defense_lawyer_name TEXT, -- Can be multiple lawyers
+    defense_lawyer_name TEXT[], -- Array of multiple lawyers
     defense_lawyer_office_address TEXT,
-    prosecutor_name TEXT,
+    prosecutor_name TEXT[], -- Array of multiple prosecutors
     court_clerk_name VARCHAR(200),
-    judge_name TEXT, -- Can be array
+    judge_name TEXT[], -- Array of panel judges
 
     -- Charge Information - Dakwaan (9 fields)
     charge_chronology TEXT,
@@ -1177,19 +1168,9 @@ CREATE TABLE IF NOT EXISTS id_sc.approved_extractions (
     state_loss_verdict BIGINT,
     state_loss_auditor VARCHAR(100),
 
-    -- Mitigating & Aggravating Factors (12 fields)
-    aggravating_factor_1 TEXT,
-    aggravating_factor_2 TEXT,
-    aggravating_factor_3 TEXT,
-    aggravating_factor_4 TEXT,
-    aggravating_factor_5 TEXT,
-    mitigating_factor_1 TEXT,
-    mitigating_factor_2 TEXT,
-    mitigating_factor_3 TEXT,
-    mitigating_factor_4 TEXT,
-    mitigating_factor_5 TEXT,
-    mitigating_factor_6 TEXT,
-    mitigating_factor_7 TEXT,
+    -- Mitigating & Aggravating Factors (2 fields)
+    aggravating_factor TEXT[], -- Array of aggravating factors
+    mitigating_factor TEXT[], -- Array of mitigating factors
 
     -- Store all fields as JSONB for flexibility
     all_fields_json JSONB NOT NULL,
@@ -1389,7 +1370,7 @@ Response:
             "validation_message": "NIK format valid but could not verify checksum",
             "review_required": true
         },
-        // ... all 65+ fields
+        // ... all 69 fields
     },
     "cost_breakdown": {
         "pdf_extraction": 0.05,
@@ -1681,7 +1662,7 @@ ERROR_HANDLING_STRATEGY = {
 
 ### 9.1 Phase 1 Goals (Month 1-2)
 
-- [ ] Extract all 72 fields for corruption cases with >80% accuracy
+- [ ] Extract all 69 fields for corruption cases with >80% accuracy
 - [ ] Process 10 ID_SC documents daily (focus on corruption cases)
 - [ ] Maintain average cost <$1.50 per document
 - [ ] Review workflow operational
@@ -1812,11 +1793,11 @@ ERROR_HANDLING_STRATEGY = {
   },
 
   "legal_representatives": {
-    "defense_lawyer_name": "Ahmad Budiman, S.H., M.H. dan Siti Rahma, S.H.",
+    "defense_lawyer_name": ["Ahmad Budiman, S.H., M.H.", "Siti Rahma, S.H."],
     "defense_lawyer_office_address": "Kantor Hukum Budiman & Partners, Jl. Thamrin No. 10, Jakarta Pusat",
-    "prosecutor_name": "Andi Wijaya, S.H. dan Rini Susanti, S.H.",
+    "prosecutor_name": ["Andi Wijaya, S.H.", "Rini Susanti, S.H."],
     "court_clerk_name": "Hendra Gunawan",
-    "judge_name": "Dr. Bambang Sutrisno, S.H., M.H. (Ketua), Siti Aminah, S.H., Ahmad Fauzi, S.H. (Anggota)"
+    "judge_name": ["Dr. Bambang Sutrisno, S.H., M.H. (Ketua)", "Siti Aminah, S.H. (Anggota)", "Ahmad Fauzi, S.H. (Anggota)"]
   },
 
   "charges": {
@@ -1866,11 +1847,11 @@ ERROR_HANDLING_STRATEGY = {
   },
 
   "sentencing_considerations": {
-    "aggravating_factors": [
+    "aggravating_factor": [
       "Perbuatan terdakwa sangat merugikan keuangan negara",
       "Perbuatan terdakwa tidak mendukung program pemerintah dalam pemberantasan korupsi"
     ],
-    "mitigating_factors": [
+    "mitigating_factor": [
       "Terdakwa bersikap sopan di persidangan",
       "Terdakwa belum pernah dihukum",
       "Terdakwa menyesali perbuatannya",
@@ -1890,7 +1871,7 @@ ERROR_HANDLING_STRATEGY = {
       "llm_validation": 0.12,
       "total": 1.53
     },
-    "fields_extracted": 72,
+    "fields_extracted": 69,
     "fields_requiring_review": 6,
     "confidence_distribution": {
       "high_confidence_90_plus": 58,

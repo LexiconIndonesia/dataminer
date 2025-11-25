@@ -4,30 +4,12 @@ import asyncio
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel, Field
 
 from dataminer import __version__
+from dataminer.api.generated import HealthResponse, ReadinessResponse
 from dataminer.core.config import get_settings
 
 router = APIRouter(tags=["Health"])
-
-
-class HealthResponse(BaseModel):
-    """Health check response model."""
-
-    status: str = Field(default="healthy", description="Service status")
-    version: str = Field(description="Application version")
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
-        description="Current timestamp",
-    )
-
-
-class ReadinessResponse(BaseModel):
-    """Readiness check response model."""
-
-    ready: bool = Field(description="Service readiness status")
-    checks: dict[str, bool] = Field(default_factory=dict, description="Individual component checks")
 
 
 @router.get(
@@ -39,7 +21,7 @@ class ReadinessResponse(BaseModel):
 )
 async def health_check() -> HealthResponse:
     """Check if the service is healthy."""
-    return HealthResponse(version=__version__)
+    return HealthResponse(version=__version__, timestamp=datetime.now(UTC))
 
 
 async def _check_database() -> bool:

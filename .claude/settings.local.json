@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make lint:*)",
+      "Bash(make test-fast:*)",
+      "Bash(uv run:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

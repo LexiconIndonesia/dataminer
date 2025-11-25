@@ -17,6 +17,8 @@ A high-performance document extraction service for processing legal documents fr
 - **Python**: 3.14
 - **Package Manager**: UV
 - **Web Framework**: FastAPI
+- **API Design**: Contract-first with OpenAPI
+- **Code Generation**: datamodel-code-generator for Pydantic models
 - **Database**: PostgreSQL 16+
 - **Migrations**: Alembic
 - **SQL**: SQLC for type-safe queries
@@ -29,26 +31,32 @@ A high-performance document extraction service for processing legal documents fr
 
 ### Prerequisites
 
-- Python 3.14
-- UV package manager
+- Python 3.14+
+- [UV package manager](https://github.com/astral-sh/uv) - Fast Python package installer
 - Docker and Docker Compose
 - Make
 
 ### Installation
 
 ```bash
-# Install dependencies
+# 1. Install all dependencies (including dev dependencies like datamodel-code-generator)
 make install
 
-# Start services (PostgreSQL, Redis, NATS)
+# 2. Generate API models from OpenAPI spec
+#    This requires datamodel-code-generator to be installed (included in dev dependencies)
+make api-generate
+
+# 3. Start services (PostgreSQL, Redis, NATS)
 make docker-up
 
-# Run database migrations
+# 4. Run database migrations
 make migrate
 
-# Seed initial data
+# 5. Seed initial data
 make db-seed
 ```
+
+**Note:** The `make install` command runs `uv sync --all-extras` which installs all dependencies including code generation tools like `datamodel-code-generator`.
 
 ### Development
 
@@ -79,25 +87,105 @@ make check
 
 Run `make help` to see all available commands.
 
+## API Development (Contract-First)
+
+This project follows **contract-first API development**, where the OpenAPI specification serves as the single source of truth for API models.
+
+### Workflow
+
+```bash
+# 1. Design/update API contract
+vi openapi.yaml
+
+# 2. Generate Pydantic models from spec
+make api-generate
+
+# 3. Models are auto-generated in src/dataminer/api/generated/models.py
+# 4. Import and use in your routes
+from dataminer.api.generated import DocumentSourceResponse
+```
+
+### What's Tracked vs Generated
+
+**✅ Tracked in Git (Source of Truth):**
+- `openapi.yaml` - API contract specification
+- `src/dataminer/api/generated/__init__.py` - Clean import interface
+
+**❌ Git Ignored (Generated Code):**
+- `src/dataminer/api/generated/models.py` - Auto-generated from spec (requires `datamodel-code-generator`, run `make api-generate`)
+- `src/dataminer/db/queries/` - Auto-generated from SQLC (run `make sqlc-generate`)
+- `sql/schema.sql` - Auto-generated from Alembic (run `make schema-generate`)
+
+### Benefits of Contract-First
+
+- **Single Source of Truth**: OpenAPI spec defines everything
+- **No Drift**: Models always match documentation
+- **Better Collaboration**: Frontend can work from spec independently
+- **Client Generation**: Generate TypeScript/Go/etc clients from same spec
+- **API Governance**: Easier contract review and approval
+
+### After Pulling Changes
+
+If someone updated `openapi.yaml`, regenerate the models:
+
+```bash
+git pull
+make api-generate
+```
+
+### Troubleshooting
+
+**Error: "datamodel-code-generator is not installed"**
+
+If you see this error when running `make api-generate`, install development dependencies:
+
+```bash
+# Install all dependencies including dev tools
+make install
+
+# Or manually sync dependencies
+uv sync
+
+# Verify installation
+uv run datamodel-codegen --version
+```
+
 ## Project Structure
 
 ```
 dataminer/
 ├── src/
-│   └── dataminer/         # Application source code
-│       ├── api/           # API endpoints
-│       ├── core/          # Core business logic
-│       ├── db/            # Database models and queries
-│       ├── services/      # External services integration
-│       └── utils/         # Utility functions
-├── tests/                 # Test files
-├── migrations/            # Alembic migrations
-├── docs/                  # Documentation
-├── PRD/                   # Product requirements
-├── Makefile              # Development commands
-├── pyproject.toml        # Project configuration
-└── docker-compose.yml    # Local development setup
+│   └── dataminer/              # Application source code
+│       ├── api/                # API endpoints
+│       │   ├── generated/      # Generated Pydantic models (run make api-generate)
+│       │   ├── v1/             # API version 1 routes
+│       │   ├── app.py          # FastAPI application
+│       │   └── health.py       # Health check endpoints
+│       ├── core/               # Core business logic
+│       ├── db/                 # Database models and queries
+│       │   ├── models/         # SQLAlchemy ORM models
+│       │   ├── repositories/   # Data access layer
+│       │   └── queries/        # SQLC generated queries (run make sqlc-generate)
+│       ├── services/           # External services integration
+│       └── utils/              # Utility functions
+├── tests/                      # Test files
+├── migrations/                 # Alembic database migrations
+│   └── alembic/
+│       ├── versions/           # Migration files
+│       └── env.py              # Alembic configuration
+├── sql/                        # SQL files
+│   ├── queries/                # SQLC query definitions
+│   └── schema.sql              # Generated schema (run make schema-generate)
+├── docs/                       # Documentation
+├── PRD/                        # Product requirements
+├── openapi.yaml               # API contract specification (source of truth)
+├── openapi.json               # API contract (JSON format)
+├── Makefile                   # Development commands
+├── pyproject.toml             # Project configuration
+└── docker-compose.yml         # Local development setup
 ```
+
+**Note:** Files marked with "run make ..." are auto-generated and git-ignored. Regenerate them locally after pulling changes.
 
 ## API Documentation
 
@@ -149,6 +237,28 @@ make db-reset
 make db-seed
 ```
 
+## Code Generation
+
+### API Models (Contract-First)
+
+```bash
+# Generate Pydantic models from OpenAPI spec
+# Requires: datamodel-code-generator (installed via 'make install')
+make api-generate
+```
+
+**Important:** After pulling changes to `openapi.yaml`, always run `make api-generate` to regenerate models locally.
+
+### Database Code Generation
+
+```bash
+# Generate SQL schema from Alembic models
+make schema-generate
+
+# Generate type-safe SQL queries with SQLC
+make sqlc-generate
+```
+
 ## Docker
 
 ```bash
@@ -167,10 +277,29 @@ docker-compose logs -f
 
 ## Contributing
 
-1. Create a feature branch
-2. Make your changes
-3. Run `make check` to ensure quality
-4. Submit a pull request
+1. **Setup**: Ensure you have all dev dependencies installed
+
+   ```bash
+   make install  # Installs datamodel-code-generator and other dev tools
+   ```
+
+2. **Create a feature branch**
+
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **Make your changes**
+   - If you modify `openapi.yaml`, run `make api-generate` to regenerate models
+   - Follow contract-first principles for API changes
+
+4. **Run all checks** to ensure quality
+
+   ```bash
+   make check  # Runs lint + typecheck + tests
+   ```
+
+5. **Submit a pull request**
 
 ## License
 

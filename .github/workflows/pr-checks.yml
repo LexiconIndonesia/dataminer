@@ -9,6 +9,10 @@ on:
 env:
   PYTHON_VERSION: "3.13"  # 3.14 not yet available in GitHub Actions
 
+# Minimal permissions for security (CodeQL best practice)
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint Code
@@ -70,19 +74,57 @@ jobs:
       - name: Install dependencies
         run: make install
 
+      - name: Install SQLC
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: '1.30.0'
+
+      - name: Generate API models
+        run: make api-generate
+
+      - name: Generate SQLC queries
+        run: sqlc generate
+
       - name: Run type checker
         run: make typecheck
 
-  test:
-    name: Run Tests
+  test-unit:
+    name: Unit Tests
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run unit tests
+        run: make test-unit
+
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     services:
       postgres:
-        image: postgres:16-alpine
+        image: ghcr.io/lexiconindonesia/lexicon-postgresql-server:latest
+        credentials:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN }}
         env:
           POSTGRES_USER: dataminer
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: dataminer_test
+          POSTGRES_DB: dataminer
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -116,11 +158,22 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Run tests with coverage
+      - name: Install SQLC
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: '1.30.0'
+
+      - name: Generate API models
+        run: make api-generate
+
+      - name: Generate SQLC queries
+        run: sqlc generate
+
+      - name: Run integration tests with coverage
         env:
-          DATABASE_URL: postgresql://dataminer:password@localhost:5432/dataminer_test
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379/1
-        run: make test-cov
+        run: uv run pytest tests/integration/ -v --cov=src/dataminer --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4

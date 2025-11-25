@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, PostgresDsn, RedisDsn, field_validator
+from pydantic import Field, PostgresDsn, RedisDsn, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,10 +30,17 @@ class Settings(BaseSettings):
     api_host: str = Field(default="0.0.0.0", description="API host")
     api_port: int = Field(default=8000, description="API port")
     api_prefix: str = Field(default="/api/v1", description="API prefix")
-    allowed_origins: list[str] = Field(
-        default=["http://localhost:3000", "http://localhost:8000"],
-        description="Allowed CORS origins",
+    allowed_origins_str: str = Field(
+        default="http://localhost:3000,http://localhost:8000",
+        alias="allowed_origins",
+        description="Allowed CORS origins (comma-separated)",
     )
+
+    @computed_field
+    @property
+    def allowed_origins(self) -> list[str]:
+        """Parse allowed origins from comma-separated string."""
+        return [origin.strip() for origin in self.allowed_origins_str.split(",") if origin.strip()]
 
     # Database Settings
     database_url: PostgresDsn = Field(
@@ -69,14 +76,6 @@ class Settings(BaseSettings):
     default_max_cost_per_document: float = Field(
         default=2.00, description="Default max cost per document"
     )
-
-    @field_validator("allowed_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
-        """Parse CORS origins from string or list."""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
 
     @property
     def is_production(self) -> bool:

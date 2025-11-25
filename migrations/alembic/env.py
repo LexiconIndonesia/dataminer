@@ -1,4 +1,8 @@
-"""Alembic migration environment configuration."""
+"""Alembic migration environment configuration.
+
+Note: This project uses manual SQL migrations, not autogenerate.
+ORM models are not required for migration management.
+"""
 
 import sys
 from logging.config import fileConfig
@@ -10,16 +14,7 @@ from sqlalchemy import engine_from_config, pool
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parents[3] / "src"))
 
-from dataminer.db.base import Base, get_sync_engine_url
-
-# Import all models here to ensure they are registered with Base.metadata
-from dataminer.db.models.configuration import (  # noqa: F401
-    DocumentSource,
-    SourceExtractionProfile,
-    SourceFieldDefinition,
-    SourceNormalizationRule,
-    SourcePromptTemplate,
-)
+from dataminer.core.config import get_settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -31,10 +26,11 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Set the database URL from settings
-config.set_main_option("sqlalchemy.url", get_sync_engine_url())
+settings = get_settings()
+config.set_main_option("sqlalchemy.url", str(settings.database_url))
 
-# Set target metadata for autogenerate support
-target_metadata = Base.metadata
+# No target_metadata needed for manual migrations
+target_metadata = None
 
 
 def run_migrations_offline() -> None:

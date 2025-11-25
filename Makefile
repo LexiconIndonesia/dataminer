@@ -1,8 +1,9 @@
-.PHONY: help install dev test test-cov lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down openapi security
+.PHONY: help install dev test test-unit test-integration test-cov test-fast test-watch lint format format-check typecheck check clean migrate migrate-down migration db-reset db-seed docker-build docker-up docker-down api-generate schema-generate sqlc-generate regenerate-all pre-commit pre-commit-install pre-commit-run security
 
 # Colors for output
 BLUE := \033[0;34m
 GREEN := \033[0;32m
+RED := \033[0;31m
 NC := \033[0m # No Color
 
 help: ## Show this help message
@@ -27,8 +28,16 @@ dev: ## Run development server with hot reload
 
 # Testing
 test: ## Run all tests
-	@echo "$(BLUE)Running tests...$(NC)"
+	@echo "$(BLUE)Running all tests...$(NC)"
 	uv run pytest tests/ -v
+
+test-unit: ## Run unit tests only (no external dependencies)
+	@echo "$(BLUE)Running unit tests...$(NC)"
+	uv run pytest tests/unit/ -v
+
+test-integration: ## Run integration tests only (requires database)
+	@echo "$(BLUE)Running integration tests...$(NC)"
+	uv run pytest tests/integration/ -v
 
 test-cov: ## Run tests with coverage report
 	@echo "$(BLUE)Running tests with coverage...$(NC)"
@@ -125,20 +134,44 @@ docker-dev: ## Start services in development mode
 	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 # Code Generation
-openapi: ## Generate OpenAPI spec
-	@echo "$(BLUE)Generating OpenAPI spec...$(NC)"
-	uv run python -c "from dataminer.api.app import app; import json; spec = app.openapi(); print(json.dumps(spec, indent=2))" > openapi.json
-	@echo "$(GREEN)OpenAPI spec saved to openapi.json$(NC)"
+api-generate: ## Generate Pydantic models from OpenAPI spec (contract-first)
+	@echo "$(BLUE)Generating Pydantic models from OpenAPI spec...$(NC)"
+	@if ! uv run python -c "import datamodel_code_generator" 2>/dev/null; then \
+		echo "$(RED)Error: datamodel-code-generator is not installed$(NC)"; \
+		echo ""; \
+		echo "Install it with: $(GREEN)make install$(NC)"; \
+		echo "Or manually with: $(GREEN)uv sync$(NC)"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@mkdir -p src/dataminer/api/generated
+	uv run datamodel-codegen \
+		--input openapi.yaml \
+		--output src/dataminer/api/generated/models.py \
+		--output-model-type pydantic_v2.BaseModel \
+		--target-python-version 3.14 \
+		--use-standard-collections \
+		--use-schema-description \
+		--field-constraints \
+		--use-default \
+		--use-annotated \
+		--use-title-as-name \
+		--disable-timestamp
+	@echo "$(GREEN)Generated models saved to src/dataminer/api/generated/models.py$(NC)"
 
-schema-generate: ## Generate SQL schema from Alembic models
-	@echo "$(BLUE)Generating SQL schema...$(NC)"
+schema-generate: ## Generate SQL schema from database (requires running PostgreSQL)
+	@echo "$(BLUE)Generating SQL schema from database...$(NC)"
 	uv run python scripts/generate_schema.py
-	@echo "$(GREEN)SQL schema generated$(NC)"
+	@echo "$(GREEN)SQL schema generated in sql/schema/current_schema.sql$(NC)"
+	@echo "$(BLUE)Note: Commit the updated schema file after migrations$(NC)"
 
-sqlc-generate: schema-generate ## Generate type-safe SQL code with SQLC
+sqlc-generate: ## Generate type-safe SQL code with SQLC (uses committed schema)
 	@echo "$(BLUE)Generating SQLC code...$(NC)"
 	sqlc generate
 	@echo "$(GREEN)SQLC code generated in src/dataminer/db/queries$(NC)"
+
+regenerate-all: schema-generate sqlc-generate ## Regenerate schema and SQLC code (after migrations)
+	@echo "$(GREEN)Schema and SQLC code regenerated$(NC)"
 
 # Maintenance
 clean: ## Clean build artifacts and caches
@@ -159,13 +192,15 @@ clean-all: clean ## Clean everything including venv
 	@echo "$(GREEN)All clean$(NC)"
 
 # Pre-commit hooks
+pre-commit: ## Run pre-commit hooks on all files
+	@echo "$(BLUE)Running pre-commit hooks...$(NC)"
+	uv run pre-commit run --all-files
+
 pre-commit-install: ## Install pre-commit hooks
 	@echo "$(BLUE)Installing pre-commit hooks...$(NC)"
 	uv run pre-commit install
 
-pre-commit-run: ## Run pre-commit hooks on all files
-	@echo "$(BLUE)Running pre-commit hooks...$(NC)"
-	uv run pre-commit run --all-files
+pre-commit-run: pre-commit ## Alias for pre-commit
 
 # Info
 version: ## Show project version
